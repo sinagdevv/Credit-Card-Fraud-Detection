@@ -60,7 +60,3 @@ Start with the [project scope](docs/project/PROJECT-SCOPE.md), [deliverables map
 | D2 Synthetic Dataset Generator | Planned | Implementation has not started |
 | D3 Exploratory Data Analysis | Planned | Requires an accepted D2 dataset |
 
-## Team responsibilities
-
-John Ray owns generator architecture, mathematical implementation, fraud-event simulation, scalability, integration, advanced fraud analysis, evaluation methodology, and final technical review. Jee owns statistical QA for D2 and the primary EDA, visualizations, feature analysis, and written findings for D3. Major contributions require cross-review; this repository does not claim review or approval before it occurs.
-
