@@ -1,0 +1,5 @@
+erDiagram
+  CARDHOLDERS ||--|{ CARDS : owns
+  CARDS ||--o{ TRANSACTIONS : initiates
+  MERCHANTS ||--o{ TRANSACTIONS : accepts
+  TRANSACTIONS ||--o| FRAUD_LABELS : may_receive

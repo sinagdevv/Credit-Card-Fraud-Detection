@@ -1,0 +1,38 @@
+# Local tooling and editor state
+.serena/
+.idea/
+.vscode/
+
+# Python and notebook caches
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Generated datasets and model artifacts
+data/
+datasets/
+outputs/
+artifacts/
+models/
+*.csv
+*.parquet
+*.pkl
+*.joblib
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Temporary document exports
+.qa/
+~$*.docx
+*.tmp
+
