@@ -2,6 +2,8 @@
 .serena/
 .idea/
 .vscode/
+graphify-out
+.claude
 
 # Python and notebook caches
 __pycache__/
