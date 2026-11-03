@@ -6,7 +6,7 @@ Implement a reproducible Jupyter notebook that converts the approved Deliverable
 
 ## Required output
 
-The generator must export the five normalized tables defined in Deliverable 1: `cardholders`, `cards`, `merchants`, `transactions`, and `fraud_labels`. Dataset size must be configurable without changing the model, and a deterministic master seed must reproduce the same output under the documented runtime and configuration.
+The generator must export the five normalized tables defined in Deliverable 1: `cardholders`, `cards`, `merchants`, `transactions`, and `fraud_labels`. Dataset size must be configurable without changing the model, and a deterministic master seed must reproduce the same output under the documented runtime and configuration. In addition, it must write the aggregate `label_gap_summary.csv` defined in Section 6.1 of the D1 specification; D3 uses it for ground-truth comparisons and never loads row-level ground truth.
 
 The notebook must implement the registered distributions, structural equations, fraud episodes, selective investigation process, delayed observed labels, and strictly prior rolling features. Account takeover, card-not-present compromise, travel, merchant vulnerability, transaction velocity, geography, and amount effects must follow the documented causal sampling order.
 
