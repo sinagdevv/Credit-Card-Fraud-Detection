@@ -17,10 +17,17 @@ ERD = ROOT / "deliverables/D1_Model_Research_and_Specifications/assets/SD-008_ER
 
 
 def font(size, bold=False):
-    try:
-        return ImageFont.truetype("arialbd.ttf" if bold else "arial.ttf", size)
-    except OSError:
-        return ImageFont.load_default()
+    candidates = (
+        ("arialbd.ttf", "LiberationSans-Bold.ttf", "DejaVuSans-Bold.ttf", "/usr/share/fonts/noto/NotoSans-Bold.ttf")
+        if bold
+        else ("arial.ttf", "LiberationSans-Regular.ttf", "DejaVuSans.ttf", "/usr/share/fonts/noto/NotoSans-Regular.ttf")
+    )
+    for name in candidates:
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
 
 
 def build_erd():

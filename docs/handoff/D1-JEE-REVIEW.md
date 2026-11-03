@@ -8,7 +8,7 @@ John Ray owns completion and technical QA of Deliverable 1. Jee performs a bound
 
 - [ ] Spot-check the reference metadata and contextual limits recorded in the evidence matrix.
 - [ ] Check author order, year, title, venue, pages, DOI, and URL in APA 7 style.
-- [ ] Confirm the BSP 52.8% figure is described only as retail-payment digitalization.
+- [ ] Confirm the BSP digital-payment shares (57.4% volume, 59.0% value for 2024; 64.7% volume for 2025) are described only as retail-payment digitalization.
 - [ ] Seek Philippine credit-card evidence for amount, channel, MCC, fraud-type, and label-delay distributions.
 - [ ] Mark each evidence-matrix row SUPPORTED, CALIBRATED, ASSUMED, or OPEN.
 
@@ -38,11 +38,11 @@ John Ray owns completion and technical QA of Deliverable 1. Jee performs a bound
 
 ## Issue status recommendation
 
-The public issue IDs and project-card identifiers remain unavailable because the GitHub repository has no remote branch history and the GitHub connector failed. Do not create replacements or invent links. Once access is restored, attach the final files to D1-01 through D1-08, move technically complete items according to their acceptance criteria, and record the remaining team-review step accurately.
+The public issues are D1-01 through D1-08 (#1 to #8) on the GitHub repository. Attach the final files to them, move technically complete items according to their acceptance criteria, and record the remaining team-review step accurately. Do not create duplicate issues.
 
 ## Next-deliverable responsibilities
 
-The detailed division for Deliverables 2 and 3 is maintained in `docs/planning/SPRINT-02-03-RESPONSIBILITIES.md`. Jee owns statistical QA and validation documentation for D2 and primary EDA development for D3; John owns generator implementation and final technical integration.
+The detailed division for Deliverables 2 and 3 is maintained in `docs/project/TEAM-WORKFLOW.md`. Jee owns statistical QA and validation documentation for D2 and primary EDA development for D3; John owns generator implementation and final technical integration.
 
 ## Sign-off record
 

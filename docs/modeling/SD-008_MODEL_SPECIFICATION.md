@@ -31,11 +31,11 @@ SD-008 will generate relational, privacy-preserving synthetic credit-card data f
 
 Real card data are scarce because transaction histories expose financial behavior and operational controls. Public benchmarks are useful but often short, anonymized, geographically mismatched, or fully labeled. SD-008 therefore needs a transparent simulator whose parameters, dependencies, sampling order, omissions, and limitations are auditable.
 
-Fraud detection is difficult because fraud is rare, behavior changes, legitimate and fraudulent transactions overlap, and reliable labels arrive selectively and late. Dal Pozzolo et al. (2015, 2017) show that class imbalance, concept drift, investigator feedback, and delayed customer reports must be handled explicitly. A dataset with perfect immediate labels would remove an important operational difficulty.
+Fraud detection is difficult because fraud is rare, behavior changes, legitimate and fraudulent transactions overlap, and reliable labels arrive selectively and late. Dal Pozzolo et al. (2015, 2018) show that class imbalance, concept drift, investigator feedback, and delayed customer reports must be handled explicitly; Le Borgne et al. (2022) document the same issues in a reproducible practitioner handbook. A dataset with perfect immediate labels would remove an important operational difficulty.
 
 ## 1.3 Philippine digital banking context
 
-The BSP reported that digital payments represented 57.4% of retail-payment volume and 59.0% of value in measurement year 2024 (Bangko Sentral ng Pilipinas [BSP], 2025a). Its 2025 report records a further increase to 64.7% by volume (BSP, 2026). These adoption measures cover retail-payment instruments including transfers, QR payments, e-money, and cards; they are **not** credit-card shares and **not** fraud rates. BSP Circular No. 1019 distinguishes card-present counterfeit exposure from card-not-present and contactless transactions (BSP, 2018). Circular No. 1195 governs account-to-account electronic fund transfers under the NRPS and is therefore not used as a general credit-card dispute rule (BSP, 2024).
+The BSP reported that digital payments represented 57.4% of retail-payment volume and 59.0% of value in measurement year 2024 (Bangko Sentral ng Pilipinas [BSP], 2025). Its 2025 report records a further increase to 64.7% by volume (BSP, 2026). These adoption measures cover retail-payment instruments including transfers, QR payments, e-money, and cards; they are **not** credit-card shares and **not** fraud rates. BSP Circular No. 1019 distinguishes card-present counterfeit exposure from card-not-present and contactless transactions (BSP, 2018). Circular No. 1195 governs account-to-account electronic fund transfers under the NRPS and is therefore not used as a general credit-card dispute rule (BSP, 2024).
 
 Philippine fraud evidence is likewise definition-sensitive. TransUnion reported a 4.1% suspected digital-fraud indicator rate for 2025 across client websites and applications, with 6.1% at login, 4.5% at account creation, and 1.1% at financial transactions (TransUnion, 2026). Those indicators include policy violations and multiple industries; they are not confirmed issuer credit-card fraud probabilities. A BSP briefing reported by Ta-Asan (2026) attributed 76% of reported cyber-fraud losses to social engineering, account takeover, and identity theft collectively and 8% to card-not-present fraud. These are shares of reported losses, not transaction frequencies or fraud-type generation probabilities. A 2026 survey found that 84% of 1,160 Filipino adults encountered a scam attempt and only 4% reported one to authorities (Philippine News Agency, 2026); the survey describes exposure and under-reporting, not card incidence. Together, the sources support modeling credential compromise, selective reporting, and delayed observation while leaving prevalence parameters open.
 
@@ -83,11 +83,11 @@ Desk research prioritized BSP publications and primary peer-reviewed or institut
 | EMV rules distinguish card-present counterfeit exposure from CNP/contactless | BSP Circular 1019 | 2018 | `channel`, `entry_mode` | model channel-specific fraud mechanisms | Strong | regulatory scope is not prevalence evidence |
 | Fraud streams are imbalanced and non-stationary | Dal Pozzolo et al. | 2014 | fraud rate, time | preserve rarity and drift scenarios | Strong | proprietary European data |
 | Investigator feedback and delayed labels differ operationally | Dal Pozzolo et al. | 2015 | review and label timestamps | separate review from later reporting | Strong | exact delays are not transferable |
-| Realistic fraud evaluation must model verification latency | Dal Pozzolo et al. | 2017 | sparse observed labels | no missing-row-equals-legitimate shortcut | Strong | foreign issuer environment |
+| Realistic fraud evaluation must model verification latency | Dal Pozzolo et al. | 2018 | sparse observed labels | no missing-row-equals-legitimate shortcut | Strong | foreign issuer environment |
 | Payment amounts are heavily right-skewed and lognormal is usable | Allen | 2025 | `amount_php` | conditional lognormal with caps | Moderate | US diary calibration, mixed debit/credit context |
 | Daily transaction counts can be simulated with a count process | Allen | 2025 | arrivals | Poisson baseline with gamma heterogeneity | Moderate | Philippine rate requires calibration |
 | Entity profiles plus event simulation support scalable synthetic card data | Allen | 2025 | full architecture | use payer, merchant, and event phases | Strong | Bayesian fraud formulation differs here |
-| Public ULB data demonstrate extreme imbalance | Dal Pozzolo et al. / ULB benchmark | 2015-2017 | validation scenario | use only as sensitivity reference | Moderate | two days and anonymized features |
+| Public ULB data demonstrate extreme imbalance | Dal Pozzolo et al. / ULB benchmark | 2015-2018 | validation scenario | use only as sensitivity reference | Moderate | two days and anonymized features |
 | Online features must be computed from past events | Carcillo et al. | 2018 | velocity and deviation | sort chronologically and update after scoring | Strong | implementation details need D2 validation |
 | Synthetic simulation protects sensitive payment records but needs validation | Allen | 2025 | project rationale | publish assumptions and validation targets | Strong | synthetic data do not prove external validity |
 | Consumer protection requires fraud controls and transaction notification | BSP Circular 1169 FAQ | 2023 | review/report process | allow customer-report label source | Strong | policy principle, not distribution evidence |
@@ -179,7 +179,7 @@ The rendered image is stored at `deliverables/D1_Model_Research_and_Specificatio
 
 ## 3.3 Constraints and label reconstruction
 
-IDs are synthetic opaque strings. Dates obey `account_open_date <= issue_date <= transaction_ts < expiry_date`. Amounts are positive for approved and declined purchase attempts; `authorization_status` is from a closed vocabulary. Merchant country and region are independent where foreign. A `fraud_labels` row exists only after alert review or customer-report sampling. If `review_status='confirmed'`, `observed_fraud` is non-null; pending reviews have null outcomes.
+IDs are synthetic opaque strings. Dates obey `account_open_date <= issue_date <= transaction_ts < expiry_date`. Amounts are positive for approved and declined purchase attempts; `authorization_status` is from a closed vocabulary. Merchant region is country-consistent: domestic merchants use a Philippine region and foreign merchants a foreign area that belongs to their country. A `fraud_labels` row exists only after alert review or customer-report sampling. If `review_status` is `confirmed` or `cleared`, `observed_fraud` is non-null (true and false respectively); pending reviews have null outcomes.
 
 For model training, construct `training_label` only from rows with resolved review outcomes or matured customer reports. Unlabeled transactions remain null and are excluded from ordinary supervised loss, used in positive-unlabeled methods, or sampled under an explicitly documented negative-maturation rule. They must never be automatically set to zero.
 
@@ -241,18 +241,20 @@ Indices are cardholders (i), cards (c), merchants (m), days (d), and chronologic
 
 ## 5.7 Merchant channel and foreign selection
 
-11. **Channel and merchant conditional on state:** Let (Z_{c,d}=(B_{i,d},C_{c,d})) denote active compromise states. (P(H_k=h given Z_{c,d})=softmax_h(\delta_h+\delta_{h,C_m}+\delta_{h,tod}+\delta_{h,S_i}+\delta_{h,Z}Z_{c,d})). Merchant selection is proportional to (P_{i,C_m}\,popularity_m\,exp(-\tau D_{im})) for physical channels, with online-capability and vulnerability weights entering only when the channel and state permit them. Thus a compromise can change the transaction before the fraud outcome is drawn.
-12. **Foreign and geography:** (F_k\sim Bernoulli(logit^{-1}(\phi_0+\phi_G logit(G_i)+\phi_H[H_k]+\phi_X X_{i,d}+\phi_Z Z_{c,d}))), where (X_{i,d}) is a temporary legitimate travel state. Legitimate travel and compromise can both produce geographic anomalies.
+11. **Category, channel and merchant, in that order:** The merchant category (C_m) is drawn first from the customer's category preferences (P_{i,C_m}) and active state; the channel (H_k) is then drawn conditional on (C_m); a specific merchant is drawn last. Let (Z_{c,d}=(B_{i,d},C_{c,d})) denote active compromise states. (P(H_k=h given Z_{c,d})=softmax_h(\delta_h+\delta_{h,C_m}+\delta_{h,tod}+\delta_{h,S_i}+\delta_{h,Z}Z_{c,d})). Merchant selection within the drawn category is proportional to (popularity_m\,exp(-\tau D_{im})) for physical channels, with online-capability and vulnerability weights entering only when the channel and state permit them. Thus a compromise can change the transaction before the fraud outcome is drawn.
+12. **Foreign and geography:** The merchant pool is drawn first: (P(pool_k=foreign)=logit^{-1}(\phi_0+\phi_G logit(G_i)+\phi_H[H_k]+\phi_X X_{i,d}+\phi_Z Z_{c,d}))), where (X_{i,d}) is a temporary legitimate travel state. The merchant is then sampled from the drawn pool, and `country_code`, `merchant_region` and (F_k=1[country_m\ne PH]) are all derived from that merchant, so they cannot contradict each other. Legitimate travel and compromise can both produce geographic anomalies.
 
 ## 5.8 Legitimate amount generation
 
 13. **Amount conditional on mechanism:** A baseline draw satisfies (log A_k^{base}\sim N(\mu_i+\mu_C[C_m]+\mu_H[H_k]+\mu_t[tod_k],\sigma_i^2+\sigma_C^2[C_m])). The realized log amount is (log A_k=log A_k^{base}+\Delta_T[T_k]+e_{T,k}), where (T_k=0) for no active fraud mechanism and (\Delta_T[0]=e_{0,k}=0). The value is (A_k=clip(round(exp(log A_k),2),1,500000)). This preserves overlap because fraud shifts a distribution rather than deterministically fixing an amount.
 
+14a. **Supporting attributes:** `device_trust_level` is drawn from (\pi(device\mid H_k,Z_{c,d},T_k)) with categories trusted/new/unknown; `distance_from_home_km` is Gamma-distributed with a mean that increases with (X_{i,d}) and foreign status and is null for online channels; `product_tier` is categorical logit in income and spend propensity; the card used for an event is drawn among the holder's active (non-expired) cards with weights proportional to a per-card usage share drawn from a Dirichlet at card creation. These draws precede the behavioral features of Section 5.9.
+
 ## 5.9 Time-safe behavioral features
 
 Before sampling fraud for event (k), use only transactions (j<k):
 
-14. (tx_count_prev_1h_k=\sum_{j<k}1[t_k-1h < t_j]); (amount_sum_prev_24h_php_k=\sum_{j<k}A_j1[t_k-24h<t_j]); (spend_deviation_z_k=(log A_k-\hat\mu_{i,k^-})/max(\hat\sigma_{i,k^-},\sigma_{floor})); and (hours_since_prev_tx_k=(t_k-t_{k-1})/1h). These are the exact exported field names. The rolling state is updated only after the current row is finalized.
+14. (tx_count_prev_1h_k=\sum_{j<k}1[t_k-1h < t_j]); (amount_sum_prev_24h_php_k=\sum_{j<k}A_j1[approved_j=1]1[t_k-24h<t_j]); (spend_deviation_z_k=(log A_k-\hat\mu_{i,k^-})/max(\hat\sigma_{i,k^-},\sigma_{floor})); and (hours_since_prev_tx_k=(t_k-t_{k-1})/1h). `tx_count_prev_1h` counts all prior attempts, while `amount_sum_prev_24h_php` sums approved amounts only. These are the exact exported field names. The rolling state is updated only after the current row is finalized.
 
 ## 5.10 Compromise and fraud episodes
 
@@ -265,15 +267,17 @@ Before sampling fraud for event (k), use only transactions (j<k):
 
 The internal outcome is (Y_{true,k}\sim Bernoulli(p_k)). The outcome records whether the state-conditioned opportunity became unauthorized fraud; it does not create the observable pattern after the fact. (\beta_0) is **CALIBRATED**; other coefficients start as **ASSUMED** monotone effects and undergo sensitivity analysis.
 
-17. **Fraud mechanism and burst behavior:** Before affected attributes are finalized, candidate type (T_k\sim Categorical(\pi_T(B,C,H))) is sampled from active states. CNP mechanisms increase, but do not force, ecommerce/manual entry and unfamiliar devices; ATO changes device, merchant, and geography distributions; burst mechanisms draw (1+Poisson(\lambda_{burst})) opportunities with short exponential gaps. If (Y_{true,k}=0), the opportunity remains a legitimate state-conditioned event or is discarded according to the configured mechanism. No observable feature is a deterministic fraud code.
+17. **Fraud mechanism and burst behavior:** Before affected attributes are finalized, candidate type (T_k\sim Categorical(\pi_T(B,C,H))) is sampled from active states over the closed vocabulary {none, cnp, ato, burst, merchant_compromise}. CNP mechanisms increase, but do not force, ecommerce/manual entry and unfamiliar devices; ATO changes device, merchant, and geography distributions; burst mechanisms draw (1+Poisson(\lambda_{burst})) opportunities with short exponential gaps. If (Y_{true,k}=0), the opportunity remains a legitimate state-conditioned event or is discarded according to the configured mechanism. No observable feature is a deterministic fraud code.
 
 ## 5.11 Authorization alert review and observed labels
 
-18. **Authorization:** (P(approved_k=1)=logit^{-1}(\gamma_0-\gamma_L amount_php_k/credit_limit_php_c-\gamma_v log(1+tx_count_prev_1h_k)-\gamma_r riskScore_k)). Declined attempts remain transactions but do not update approved-spend aggregates.
+18. **Authorization:** (P(approved_k=1)=logit^{-1}(\gamma_0-\gamma_L amount_php_k/credit_limit_php_c-\gamma_v log(1+tx_count_prev_1h_k)-\gamma_r riskScore_k)), where the pre-authorization score is (riskScore_k=\psi_z|spend_deviation_z_k|+\psi_F F_k+\psi_d 1[device_trust_level_k=unknown]), computed only from observable features available at authorization time and separate from the later alert score in Eq 19. Missing (spend_deviation_z_k) contributes 0 and a missing device trust level is treated as unknown. (Y_{true,k}) does not enter authorization or alert scoring directly; it acts only through the observable features it influenced. Declined attempts remain transactions but do not update approved-spend aggregates.
 
-19. **Alert and investigation:** (score_k=\theta_0+\theta_z|spend_deviation_z_k|+\theta_v log(1+tx_count_prev_1h_k)+\theta_F foreign_transaction_k+\theta_d 1[device_trust_level_k=unknown]+\epsilon_k), (\epsilon_k\sim Logistic(0,s)). A daily capacity-constrained selection produces (R_k\in\{0,1\}), where R=1 means investigated. Because (R) depends on observable risk, reviewed transactions are not a random sample.
+19. **Alert and investigation:** (score_k=\theta_0+\theta_z|spend_deviation_z_k|+\theta_v log(1+tx_count_prev_1h_k)+\theta_F foreign_transaction_k+\theta_d 1[device_trust_level_k=unknown]+\epsilon_k), (\epsilon_k\sim Logistic(0,s)). A null (spend_deviation_z_k) contributes 0 (no history is no evidence) and a null device trust level is treated as unknown. A daily capacity-constrained selection produces (R_k\in\{0,1\}), where R=1 means investigated. Because (R) depends on observable risk, reviewed transactions are not a random sample.
 
-20. **Observed label:** Define (Y_{observed,k}) only when (R_k=1) or a delayed customer/reporting pathway matures. Review delay (D_k\sim LogNormal(\mu_D,\sigma_D^2)), truncated to 1 hour-60 days. For resolved reviews, (Y_{observed,k}\sim Bernoulli(sensitivity)) when (Y_{true,k}=1), and (Y_{observed,k}\sim Bernoulli(1-specificity)) otherwise. Investigated legitimate transactions have Y_observed=0; investigated confirmed fraud has Y_observed=1; pending and uninvestigated transactions remain unknown. No fraud_labels row implies neither Y_true=0 nor Y_observed=0.
+20. **Observed label:** Define (Y_{observed,k}) only when (R_k=1) or a delayed customer/reporting pathway matures. Review delay (D_k\sim LogNormal(\mu_D,\sigma_D^2)), truncated to 1 hour-60 days. For resolved reviews, (Y_{observed,k}\sim Bernoulli(sensitivity)) when (Y_{true,k}=1), and (Y_{observed,k}\sim Bernoulli(1-specificity)) otherwise. Review outcomes are therefore noisy: an investigated transaction can be mislabeled, and `review_status` follows the observed outcome (`confirmed` when Y_observed=1, `cleared` when Y_observed=0). Pending and uninvestigated transactions remain unknown. No fraud_labels row implies neither Y_true=0 nor Y_observed=0.
+
+20b. **Customer-report pathway:** A fraudulent transaction with (R_k=0) is reported by the customer with probability (p_{report}), after a delay (D^C_k\sim LogNormal(\mu_C,\sigma_C^2)) truncated to 1 hour-90 days. A reported transaction receives (Y_{observed,k}=1) at report time; unreported fraud stays unknown. Customer reports are not noisy in this version, and a legitimate transaction can be reported only through the optional false-report rate (p_{false}), which defaults to 0. All three parameters are OPEN in the registry.
 
 # 6 Latent and omitted variables
 
@@ -291,7 +295,7 @@ The internal outcome is (Y_{true,k}\sim Bernoulli(p_k)). The outcome records whe
 
 ## 6.1 Export exclusion contract
 
-Prohibited names and prefixes are: `latent_*`, `Y_true`, `true_fraud`, `is_true_fraud`, `fraud_ground_truth`, `compromise_state`, `ato_state`, `cnp_compromise_state`, `travel_state`, `merchant_vulnerability`, `spend_propensity`, `travel_propensity`, `fraud_probability`, and `review_probability`. Validation must fail if any prohibited exact name, prefix, or case-insensitive normalized equivalent appears in exported tables. The analytical notebook may load only an export manifest listing approved columns. Internal frames and export frames must be separate objects; dropping columns in place is insufficient.
+Prohibited names and prefixes are: `latent_*`, `Y_true`, `true_fraud`, `is_true_fraud`, `fraud_ground_truth`, `compromise_state`, `ato_state`, `cnp_compromise_state`, `travel_state`, `merchant_vulnerability`, `spend_propensity`, `travel_propensity`, `fraud_probability`, and `review_probability`. Validation must fail if any prohibited exact name, prefix, or case-insensitive normalized equivalent appears in exported tables. The analytical notebook may load only an export manifest listing approved columns. Internal frames and export frames must be separate objects; dropping columns in place is insufficient. The only exception is `label_gap_summary.csv`: an aggregate artifact with one row per group (`overall`, `month`, `channel`, `merchant_category`, `foreign_transaction`) holding counts such as `n_transactions`, `n_actual_fraud`, `n_investigated`, `n_observed_fraud`, `n_actual_fraud_observed` and `n_false_fraud_observed`. It contains no IDs, timestamps or row-level values and is the only ground-truth-derived input D3 may load.
 
 Observable proxies such as past velocity and device trust are legitimate because an issuer could know them at authorization time. Internal propensity, true fraud, and future outcomes are intentionally omitted causes and are not proxies.
 
@@ -323,6 +327,17 @@ Observable proxies such as past velocity and device trust are legitimate because
 | review delay | (\mu_D,\sigma_D) | median 2-7 days | OPEN | label-delay target | 0.25x-4x | Jee |
 | review sensitivity | (s_e) | 0.85-0.99 | ASSUMED | scenario | 0.70-1.0 | Jee |
 | review specificity | (s_p) | 0.98-0.9999 | ASSUMED | scenario | 0.95-1.0 | Jee |
+| card count coefficients | (\eta_0,\eta_I,\eta_T) | signs constrained, values unset | ASSUMED/OPEN | match cards-per-holder distribution | each +/-50% | Jee |
+| credit-limit location | (\mu_L) | unset | OPEN | match limit quantiles by income and tier | +/-0.5 log units | Jee |
+| category preference concentration | (\kappa) | unset | ASSUMED/OPEN | match within-customer category concentration | 0.5x-2x | Jee |
+| daily intensity covariate effects | (\rho_S,\rho_w,\rho_h) | unset | ASSUMED/OPEN | match weekday, holiday and spend-propensity volume ratios | each +/-50% | Jee |
+| distance decay | (\tau) | unset | ASSUMED/OPEN | match distance-to-merchant distribution | 0.25x-4x | Jee |
+| compromise covariate effects | (\omega_U,\omega_V) | signs constrained, unset | ASSUMED/OPEN | episode incidence by vulnerability | each +/-50% | Jee |
+| fraud type mix | (\pi_T) | simplex, unset | OPEN | fraud-type shares given mechanism | Dirichlet concentration 0.5x-2x | Jee |
+| spend, unfamiliarity and geography shapes | (a_S,b_S),(a_U,b_U),(a_G,b_G) | unset | ASSUMED/OPEN | match propensity marginals | concentration 0.5x-2x | Jee |
+| authorization coefficients | (\gamma_0,\gamma_L,\gamma_v,\gamma_r) | signs constrained, values unset | ASSUMED/OPEN | match approval rate by amount-to-limit ratio | each +/-50% | Jee |
+| pre-authorization risk weights | (\psi_z,\psi_F,\psi_d) | positive, unset | ASSUMED/OPEN | decline rate by risk decile | each +/-50% | John/Jee |
+| customer report probability and delay | (p_{report},\mu_C,\sigma_C,p_{false}) | unset; (p_{false})=0 | OPEN | match reported-fraud share and delay | 0.25x-4x | Jee |
 | RNG seed | (s) | 20261101 | ASSUMED reproducibility | fixed test seed | multiple seeds | John |
 
 ## 7.2 Fraud intercept calibration
@@ -348,7 +363,7 @@ by bisection over a wide bracket such as [-30, 5]. Monotonicity guarantees at mo
 
 # 8 Realism and data quality
 
-Class imbalance is produced by calibrated event probabilities, not post-hoc deletion. Heavy tails arise from lognormal mixtures and customer/category heterogeneity. Extreme values are bounded but retained. Merchant concentration comes from size-weighted selection. Temporal bursts come from compromise states and clustered gaps. Geographic differences enter legitimate travel, merchant availability, and channel selection. Missing fraud labels arise from the review/report process; optional non-key missingness must have a named MCAR, MAR, or MNAR mechanism and rate.
+Class imbalance is produced by calibrated event probabilities, not post-hoc deletion. Heavy tails arise from lognormal mixtures and customer/category heterogeneity. Extreme values are bounded but retained. Terminology: a *truncated* distribution is resampled or renormalized inside its bounds, while a *clipped* value is clamped to the nearest bound after sampling; each place in this specification uses one of the two consistently. Merchant concentration comes from size-weighted selection. Temporal bursts come from compromise states and clustered gaps. Geographic differences enter legitimate travel, merchant availability, and channel selection. Missing fraud labels arise from the review/report process; optional non-key missingness must have a named MCAR, MAR, or MNAR mechanism and rate.
 
 Amounts are rounded to centavos, with a limited probability of round-number preference. Timestamp resolution and any batching artifact are configuration choices. Primary and foreign keys, timestamps required for ordering, and amounts are never missing. No random corruption is added without an analytical purpose.
 
@@ -363,7 +378,7 @@ Amounts are rounded to centavos, with a limited probability of round-number pref
 7. Rolling features equal recomputation over strictly earlier events.
 8. Same configuration and seed produce identical hashes; different seeds change rows while preserving target tolerances.
 9. Marginal and conditional diagnostics fall in declared calibration intervals.
-10. No impossible sequence such as review before alert, label before transaction, or expired-card approval.
+10. No impossible sequence such as review before alert, label before transaction, or any transaction, approved or declined, on or after `expiry_date`.
 
 # 9 Data dictionary
 
@@ -413,7 +428,7 @@ The 38 analytical features below exclude primary and foreign keys. Values in bra
 | fraud_labels | transaction_id | string | labeled transaction | PK and FK | no | relationship | exact | transactions | contract |
 | fraud_labels | observed_fraud | boolean | analyst/customer-observed outcome | null if pending | yes | noisy observation | sensitivity/specificity | internal truth,review | Dal Pozzolo et al. 2015 |
 | fraud_labels | review_status | category | pending/confirmed/cleared | vocabulary | no | state transition | categorical | review process | model |
-| fraud_labels | fraud_type | category | CNP/ATO/burst/merchant/other | null unless fraud known | yes | observed type | noisy type map | true type,review | ASSUMED |
+| fraud_labels | fraud_type | category | cnp/ato/burst/merchant_compromise/other | null unless fraud known | yes | observed type | noisy type map | true type,review | ASSUMED |
 | fraud_labels | alert_ts | datetime | queue entry | >=transaction | yes for customer report | delay | transaction+delay | alert score | model |
 | fraud_labels | review_ts | datetime | resolution timestamp | >=alert | yes | truncated lognormal delay | alert+D | review | Dal Pozzolo et al. 2015 |
 | fraud_labels | label_source | category | analyst/customer/chargeback-proxy | vocabulary | no | conditional categorical | pi(source) | pathway | SUPPORTED mechanism/OPEN mix |
@@ -426,11 +441,11 @@ The 38 analytical features below exclude primary and foreign keys. Values in bra
 4. Generate merchants and merchant vulnerability; validate MCC/category mappings.
 5. For each day, transition travel and compromise states before events.
 6. Generate daily counts in vectorized batches; create timestamps and stable chronological IDs.
-7. Sample candidate fraud mechanism from the already-active episode states, then sample merchant, channel, foreign status, device, distance, and amount conditional on that mechanism; no label is assigned by post-hoc flipping.
-8. Sort opportunities by `(transaction_ts, transaction_id)` and compute behavioral features from finalized transactions strictly earlier than the current timestamp.
-9. Sample `Y_true` from the calibrated structural probability; retain, discard, or classify the opportunity according to the mechanism contract without rewriting its history.
-10. Sample authorization; update approved and attempted histories according to feature definitions.
-11. Score alerts, enforce daily review capacity to obtain `R`, and simulate delayed review or customer reports to obtain sparse `Y_observed`.
+7. Sample candidate fraud mechanism from the already-active episode states, then sample merchant category, channel, merchant (and with it country and foreign status), device, distance, and amount conditional on that mechanism; no label is assigned by post-hoc flipping.
+8. Sample `Y_true` from the calibrated structural probability and retain or discard the opportunity according to the mechanism contract, before any behavioral feature is computed. Discarded opportunities never appear in rolling state.
+9. Sort the retained opportunities by `(transaction_ts, transaction_id)` and compute behavioral features from finalized transactions strictly earlier than the current timestamp. The fraud intercept is calibrated on a pilot covariate sample so features do not depend on the same draw they calibrate.
+10. Compute `riskScore`, sample authorization, and update approved and attempted histories according to feature definitions.
+11. Score alerts, enforce daily review capacity to obtain `R`, and simulate delayed review or customer reports to obtain sparse `Y_observed`; also write the aggregate `label_gap_summary.csv` from the internal frames (counts by group only, no row-level fields).
 12. Build five analyst-facing tables from allowlists; never serialize internal frames.
 13. Run schema, referential, temporal, leakage, latent-exclusion, distribution, and reproducibility validation.
 14. Write atomically to a new output directory with configuration, schema version, seed, row counts, and file hashes.
@@ -455,7 +470,7 @@ Bangko Sentral ng Pilipinas. (2023). *Frequently asked questions on Circular No.
 
 Bangko Sentral ng Pilipinas. (2024). *Circular No. 1195: Consumer redress mechanism standards for account-to-account electronic fund transfers under the National Retail Payment System framework*. https://www.bsp.gov.ph/Regulations/Issuances/2024/1195.pdf
 
-Bangko Sentral ng Pilipinas. (2025a). *2024 report on e-payments measurement*. https://www.bsp.gov.ph/PaymentAndSettlement/2024_Report_on_E-payments_Measurement.pdf
+Bangko Sentral ng Pilipinas. (2025). *2024 report on e-payments measurement*. https://www.bsp.gov.ph/PaymentAndSettlement/2024_Report_on_E-payments_Measurement.pdf
 
 Bangko Sentral ng Pilipinas. (2026). *2025 report on e-payments measurement*. https://www.bsp.gov.ph/SitePages/MediaAndResearch/ReportonE-PaymentsMeasurement.aspx
 
@@ -491,7 +506,7 @@ Section 7 is the normative registry. Deliverable 2 must move it to configuration
 
 # Appendix C Omitted variable register
 
-Section 6 is normative. Internal ground truth may be retained only in a generator QA artifact that is physically separate from analyst-facing exports and never loaded by the analytical notebook.
+Section 6 is normative. Row-level internal ground truth may be retained only in a generator QA artifact that is physically separate from analyst-facing exports and never loaded by the analytical notebook. The notebook may load the aggregate `label_gap_summary.csv` described in Section 6.1 for ground-truth comparisons.
 
 # Appendix D Entity relationship diagram
 

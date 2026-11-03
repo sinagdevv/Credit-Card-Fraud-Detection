@@ -13,7 +13,7 @@ Produce a reproducible Jupyter notebook that explains the accepted synthetic dat
 - Fraud class imbalance and fraud-rate comparisons with suitable denominators
 - Merchant category, channel, geography, and merchant-risk segmentation
 - Fraud-type and compromise-mechanism analysis
-- Ground-truth, investigation-selection, and observed-label comparisons
+- Ground-truth, investigation-selection, and observed-label comparisons, using only the aggregate `label_gap_summary.csv` (no row-level ground truth)
 - Feature distributions and relationships relevant to fraud analysis
 - Written interpretations for every material table or chart
 

@@ -13,7 +13,7 @@ Jee owns the primary EDA notebook, descriptive statistics, visualizations, merch
 1. Load and verify the accepted D2 tables.
 2. Complete descriptive and data-quality summaries.
 3. Analyze spending, time, velocity, merchant, channel, geography, fraud type, and class imbalance.
-4. Compare ground truth with investigated and observed labels.
+4. Compare ground truth with investigated and observed labels using the aggregate `label_gap_summary.csv` from D2; the notebook never loads row-level ground truth.
 5. Add optional leakage-safe predictive work only if time and scope permit.
 6. Complete written interpretations and cross-review.
 
