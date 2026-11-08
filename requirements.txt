@@ -1,0 +1,8 @@
+jupyter
+nbclient
+numpy
+pandas
+pillow
+pytest
+python-docx
+pyyaml
