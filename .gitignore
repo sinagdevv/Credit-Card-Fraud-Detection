@@ -3,7 +3,9 @@
 .idea/
 .vscode/
 graphify-out
-.claude
+.claude/*
+!.claude/agents/
+.agents
 
 # Python and notebook caches
 __pycache__/
