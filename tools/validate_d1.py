@@ -138,6 +138,12 @@ def check_docx(md):
     for needle in ("SD-008 Model Research and Specifications", "Appendix G Final team review checklist"):
         if needle not in text:
             problems.append(f"docx missing: {needle}")
+    paras = [p.text for p in doc.paragraphs]
+    for prefix in ("1. Demographic stratum", "20. Observed label"):
+        if not any(t.startswith(prefix) for t in paras):
+            problems.append(f"docx missing numbered paragraph: {prefix}")
+    if any(re.search(r"_\{|\^\{|\\", t) for t in paras):
+        problems.append("docx contains raw formula markup (_{, ^{ or backslash)")
     if DOCX.stat().st_size <= 100_000:
         problems.append("docx smaller than 100 KB")
     return problems
