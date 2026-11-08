@@ -1,0 +1,707 @@
+# SD-008 D2 scenario configuration, APPROVED v0 scenario assumptions. Every parameter has approved: true.
+# Naming convention used by the check script: keys starting "pi_" hold probability simplices
+# (each leaf row sums to 1); keys starting "p_"/"q_" are scalar probabilities.
+meta:
+  schema_version: "0.1"
+  spec_reference: "docs/modeling/SD-008_MODEL_SPECIFICATION.md (Sections 5, 7.1, 9, 10; Appendix B)"
+  status: "APPROVED v0 scenario assumptions (user, 2026-11-08) — not calibration evidence"
+  note: >-
+    All values are scenario assumptions chosen to make the generator runnable and testable.
+    They are not Philippine calibration evidence and must not be cited as such.
+    Registry classifications are copied from spec Section 7.1; parameters outside the registry
+    are marked NOT_IN_REGISTRY.
+
+simulation:
+  start_date: "2026-01-01"
+  end_date: "2026-06-30"        # inclusive, 181 days
+  n_cardholders: 2000           # small test default
+  n_merchants: 500              # small test default
+  target_scale: {n_cardholders: 5000, n_merchants: 1250}   # user-approved target size
+  seed: 20261101                # registry: RNG seed
+  timestamp_resolution: "second"
+  timezone: "Asia/Manila"
+  holidays:                     # status OPEN, proposed: true (holiday_d in Eq 10)
+    status: OPEN
+    proposed: true
+    dates: ["2026-01-01", "2026-04-02", "2026-04-03", "2026-04-09", "2026-05-01", "2026-06-12"]
+
+vocabularies:
+  age_band:
+    status: OPEN
+    proposed: true
+    values: ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
+  income_band:                  # ordered low to high; edges are monthly household PHP, scenario assumption
+    status: OPEN
+    proposed: true
+    values: [lt_15k, 15k_30k, 30k_60k, 60k_120k, ge_120k]
+  home_region:
+    status: OPEN
+    proposed: true
+    values: [NCR, luzon_other, visayas, mindanao]
+  urbanicity:
+    values: [urban, peri-urban, rural]
+  employment_segment:
+    status: OPEN
+    proposed: true
+    values: [salaried_private, salaried_public, self_employed, not_employed_other]
+  card_brand:
+    status: OPEN
+    proposed: true
+    values: [brand_a, brand_b, brand_c]
+  card_status:
+    values: [active, blocked, closed]     # v0 generates only active
+  product_tier:
+    values: [basic, gold, premium]
+  merchant_category:
+    status: OPEN
+    proposed: true
+    mcc:
+      grocery: "5411"
+      dining: "5812"
+      fuel: "5541"
+      department_store: "5311"
+      pharmacy: "5912"
+      airline: "4511"
+      lodging: "7011"
+      utilities: "4900"
+      electronics: "5732"
+      entertainment: "7832"
+  country_code:
+    status: OPEN
+    proposed: true
+    values: [PH, US, SG, JP, AU]
+  merchant_region:
+    status: OPEN
+    proposed: true
+    by_country:
+      PH: [NCR, luzon_other, visayas, mindanao]
+      US: [US_West, US_East_Central]
+      SG: [Singapore]
+      JP: [Japan_Kanto, Japan_Kansai]
+      AU: [Australia_East]
+  merchant_size_band:
+    values: [small, medium, large]
+  channel:
+    values: [POS, contactless, ecommerce, mail-phone]
+  authorization_status:
+    values: [approved, declined]
+  entry_mode:
+    values: [chip, contactless, manual, tokenized]
+    channel_lookup: {POS: chip, contactless: contactless, mail-phone: manual, ecommerce: "tokenized with probability p_token else manual"}
+  device_trust_level:
+    values: [trusted, new, unknown]
+  review_status:
+    values: [pending, confirmed, cleared]
+  fraud_type:
+    values: [cnp, ato, burst, merchant_compromise]
+    internal_values: [none, cnp, ato, burst, merchant_compromise]   # none is never exported
+  label_source:
+    values: [analyst, customer]
+
+parameters:
+  underlying_fraud_target:
+    symbol: 'r_f'
+    value: 0.003
+    registry_class: "ASSUMED scenario"
+    spec_range: "0.003"
+    rationale: "copied from registry; sensitivity 0.001-0.010"
+    approved: true
+  review_coverage:
+    symbol: 'r_r'
+    value: 0.01
+    registry_class: "ASSUMED scenario"
+    spec_range: "0.01"
+    rationale: "copied from registry; sensitivity 0.005-0.05"
+    approved: true
+  daily_arrival_baseline:
+    symbol: '\lambda_0'
+    value: 1.0
+    registry_class: "OPEN; Allen family"
+    spec_range: "0.5-1.5/day"
+    rationale: "midpoint of registry range"
+    approved: true
+  count_dispersion:
+    symbol: 'r_N'
+    value: 4.0
+    registry_class: "ASSUMED"
+    spec_range: "1-10"
+    rationale: "inside registry range, moderate overdispersion (variance = mean + mean^2/4)"
+    approved: true
+  amount_log_scale:
+    symbol: '\mu_i'
+    value: {mu_by_income: {lt_15k: 6.0, 15k_30k: 6.3, 30k_60k: 6.6, 60k_120k: 6.9, ge_120k: 7.2}, spend_logit_slope: 0.2}
+    registry_class: "OPEN"
+    spec_range: "income/category conditional"
+    rationale: "scenario assumption: median base amount ~PHP 400-1,300 by income; positive spend slope on logit(S_i) per Sec 5.3 (compact form, see ambiguities)"
+    approved: true
+  amount_dispersion:
+    symbol: '\sigma_i'
+    value: 0.9
+    registry_class: "SUPPORTED family, OPEN value"
+    spec_range: "0.5-1.5"
+    rationale: "inside registry range, below midpoint because sigma_C adds variance"
+    approved: true
+  merchant_category_weights:
+    symbol: '\pi_C'
+    value:
+      pi_C: {grocery: 0.20, dining: 0.18, fuel: 0.08, department_store: 0.10, pharmacy: 0.08, airline: 0.04, lodging: 0.04, utilities: 0.10, electronics: 0.08, entertainment: 0.10}
+    registry_class: "OPEN"
+    spec_range: "simplex by scenario"
+    rationale: "scenario assumption: everyday categories dominate, travel categories rare"
+    approved: true
+  channel_coefficients:
+    symbol: '\delta'
+    value:
+      reference_channel: POS     # softmax reference, all delta = 0
+      delta_h: {contactless: 0.6, ecommerce: -0.2, mail-phone: -2.5}
+      delta_h_category:
+        contactless: {grocery: 0.3, dining: 0.4, fuel: 0.0, department_store: 0.2, pharmacy: 0.3, airline: -1.0, lodging: -0.5, utilities: -1.0, electronics: 0.0, entertainment: 0.0}
+        ecommerce: {grocery: -0.5, dining: -0.3, fuel: -2.0, department_store: 0.0, pharmacy: -0.5, airline: 2.5, lodging: 1.5, utilities: 2.0, electronics: 1.5, entertainment: 1.5}
+        mail-phone: {grocery: 0.0, dining: 0.0, fuel: 0.0, department_store: 0.0, pharmacy: 0.0, airline: 1.0, lodging: 1.0, utilities: 1.5, electronics: 0.0, entertainment: 0.0}
+      delta_h_tod:
+        contactless: {night: 0.0, morning: 0.0, afternoon: 0.0, evening: 0.0}
+        ecommerce: {night: 0.4, morning: 0.0, afternoon: 0.0, evening: 0.2}
+        mail-phone: {night: 0.0, morning: 0.0, afternoon: 0.0, evening: 0.0}
+      delta_h_spend_logit: {contactless: 0.2, ecommerce: 0.2, mail-phone: 0.0}
+      delta_h_state:
+        B: {contactless: -0.3, ecommerce: 1.0, mail-phone: 0.5}
+        C: {contactless: -0.5, ecommerce: 1.5, mail-phone: 0.8}
+    registry_class: "ASSUMED"
+    spec_range: "signs constrained, values unset"
+    rationale: "scenario assumption; sign constraint from Sec 5.10 Eq 17: compromise raises, does not force, ecommerce/manual (CNP) channels"
+    approved: true
+  ecommerce_tokenization_share:
+    symbol: 'p_{token}'
+    value: 0.6
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "sensitivity: 0.25x-4x"
+    rationale: "scenario assumption; no source cited"
+    approved: true
+  foreign_coefficients:
+    symbol: '\phi'
+    value:
+      phi_0: -4.0
+      phi_G_logit: 0.5
+      phi_H: {POS: 0.0, contactless: 0.0, ecommerce: 1.5, mail-phone: 1.0}
+      phi_X: 3.0
+      phi_Z: {B: 1.0, C: 1.5}
+    registry_class: "ASSUMED"
+    spec_range: "signs constrained, values unset"
+    rationale: "scenario assumption; all effects positive so travel, CNP channels and compromise raise foreign probability (Sec 5.7 Eq 12), travel state strong so legitimate foreign use is common"
+    approved: true
+  credit_limit_bounds:
+    symbol: '-'
+    value: {min_php: 5000, max_php: 2000000}
+    registry_class: "ASSUMED"
+    spec_range: "PHP 5k-2m"
+    rationale: "copied from registry (Eq 8 clip bounds)"
+    approved: true
+  fraud_intercept:
+    symbol: '\beta_0'
+    value: null
+    registry_class: "CALIBRATED"
+    spec_range: "root solved"
+    rationale: "solved by bisection per §7.2"
+    approved: true
+  fraud_effect_coefficients:
+    symbol: '\beta_{-0}'
+    value: {beta_B: 3.0, beta_C: 3.0, beta_V: 1.0, beta_F: 1.0, beta_H: 0.8, beta_z: 0.3, beta_v: 0.5, beta_d: 1.0, beta_BV: 1.0}
+    registry_class: "ASSUMED"
+    spec_range: "monotone sign constraints"
+    rationale: "all non-negative (monotone increasing risk, Eq 16); state effects largest so fraud concentrates in compromise episodes; magnitudes are scenario assumptions"
+    approved: true
+  compromise_initiation:
+    symbol: '\omega_0'
+    value: -5.5
+    registry_class: "ASSUMED"
+    spec_range: "yields rare episodes"
+    rationale: "keeps episodes rare: ~1 per holder-year (daily start prob ~0.0024 with typical U_i and V-bar)"
+    approved: true
+  recovery_probability:
+    symbol: 'q_{recover}'
+    value: 0.3
+    registry_class: "ASSUMED"
+    spec_range: "0.1-0.5/day"
+    rationale: "midpoint of registry range (mean episode ~3.3 days)"
+    approved: true
+  travel_state_transition:
+    symbol: 'q_{travel,on},q_{travel,off}'
+    value: {q_travel_on: 0.01, q_travel_off: 0.2}
+    registry_class: "OPEN"
+    spec_range: "unset"
+    rationale: "scenario assumption: a trip about every 100 days lasting ~5 days; daily start probability = q_travel_on * G_i / E[G], capped at 1; end probability q_travel_off"
+    approved: true
+  merchant_vulnerability_shape:
+    symbol: 'a_V,b_V'
+    value:
+      grocery: {a: 1.5, b: 8.5}
+      dining: {a: 1.5, b: 8.5}
+      fuel: {a: 1.5, b: 8.5}
+      department_store: {a: 1.5, b: 8.5}
+      pharmacy: {a: 1.5, b: 8.5}
+      airline: {a: 2.0, b: 8.0}
+      lodging: {a: 2.0, b: 8.0}
+      utilities: {a: 2.0, b: 8.0}
+      electronics: {a: 2.5, b: 7.5}
+      entertainment: {a: 2.0, b: 8.0}
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "category-specific, unset"
+    rationale: "scenario assumption: mean vulnerability 0.15-0.25, higher for online-heavy categories"
+    approved: true
+  mechanism_amount_shifts:
+    symbol: '\Delta_T'
+    value: {none: 0.0, cnp: 0.4, ato: 0.7, burst: -0.5, merchant_compromise: 0.2}
+    registry_class: "ASSUMED"
+    spec_range: "zero for legitimate; unset by fraud type"
+    rationale: "none=0 per Eq 13; others are log-amount shifts of scenario magnitude (burst smaller); registry requires a zero-shift sensitivity scenario"
+    approved: true
+  burst_mean:
+    symbol: '\lambda_{burst}'
+    value: 3.0
+    registry_class: "ASSUMED"
+    spec_range: "1-5"
+    rationale: "midpoint of registry range"
+    approved: true
+  alert_coefficients:
+    symbol: '\theta'
+    value: {theta_0: 0.0, theta_z: 0.25, theta_v: 1.2, theta_F: 1.6, theta_d: 1.6}
+    registry_class: "ASSUMED"
+    spec_range: "monotone sign constraints"
+    rationale: "user-approved 2026-11-08: weight shifted from weak |z| to strong signals (velocity, foreign, unknown device); each within registry 0.5x-2x sensitivity; test-size experiment: investigated-fraud yield 0.7%→5.8%, top-decile 16%"
+    approved: true
+  review_delay:
+    symbol: '\mu_D,\sigma_D'
+    value: {mu_D_log_hours: 4.564, sigma_D: 0.8, truncate_hours: [1, 1440]}
+    registry_class: "OPEN"
+    spec_range: "median 2-7 days"
+    rationale: "median exp(4.564)=96h=4 days, inside registry range; mu_D and sigma_D are on log-hours; truncation 1h-60d from Eq 20"
+    approved: true
+  review_sensitivity:
+    symbol: 's_e'
+    value: 0.92
+    registry_class: "ASSUMED"
+    spec_range: "0.85-0.99"
+    rationale: "inside registry range, below midpoint to keep label noise visible"
+    approved: true
+  review_specificity:
+    symbol: 's_p'
+    value: 0.995
+    registry_class: "ASSUMED"
+    spec_range: "0.98-0.9999"
+    rationale: "inside registry range"
+    approved: true
+  card_count_coefficients:
+    symbol: '\eta_0,\eta_I,\eta_T'
+    value:
+      eta_0: -2.3
+      eta_I: {lt_15k: -0.5, 15k_30k: -0.2, 30k_60k: 0.0, 60k_120k: 0.3, ge_120k: 0.6}
+      eta_T: 0.15
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "signs constrained, values unset"
+    rationale: "signs: more income and tenure give more cards (Sec 4.2); gives ~0.3 extra cards for mid income and ~1,500-day tenure"
+    approved: true
+  credit_limit_location:
+    symbol: '\mu_L'
+    value: 10.27
+    registry_class: "OPEN"
+    spec_range: "unset"
+    rationale: "median limit ~PHP 60,000 for basic tier, mid income, 1,500-day tenure given lambda_T 0.1; scenario assumption"
+    approved: true
+  category_preference_concentration:
+    symbol: '\kappa'
+    value: 10.0
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "unset"
+    rationale: "scenario assumption: moderate concentration around pi_C in Dirichlet(kappa*pi_C)"
+    approved: true
+  daily_intensity_covariate_effects:
+    symbol: '\rho_S,\rho_w,\rho_h'
+    value:
+      rho_S: 0.3
+      rho_w_mon_to_sun: [-0.05, -0.05, 0.0, 0.0, 0.15, 0.20, 0.05]
+      rho_h: {non_holiday: 0.0, holiday: 0.15}
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "unset"
+    rationale: "rho_S positive (spend propensity raises arrivals, Sec 5.3); weekday/holiday uplift is a scenario assumption"
+    approved: true
+  distance_decay:
+    symbol: '\tau'
+    value: 0.05
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "unset"
+    rationale: "per km; positive so nearer merchants are preferred (Eq 11); e-fold ~20 km, scenario assumption"
+    approved: true
+  compromise_covariate_effects:
+    symbol: '\omega_U,\omega_V'
+    value: {omega_U: 0.5, omega_V: 1.0}
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "signs constrained, unset"
+    rationale: "positive: exposure and vulnerability raise initiation (Eq 15)"
+    approved: true
+  fraud_type_mix:
+    symbol: '\pi_T'
+    value:
+      pi_T_by_state:       # keyed by active (B, C) combination; channel (H) dependence omitted, see ambiguities
+        neither: {none: 1.0, cnp: 0.0, ato: 0.0, burst: 0.0, merchant_compromise: 0.0}
+        B_only: {none: 0.35, cnp: 0.0, ato: 0.5, burst: 0.1, merchant_compromise: 0.05}
+        C_only: {none: 0.35, cnp: 0.45, ato: 0.0, burst: 0.15, merchant_compromise: 0.05}
+        both: {none: 0.2, cnp: 0.3, ato: 0.3, burst: 0.15, merchant_compromise: 0.05}
+    registry_class: "OPEN"
+    spec_range: "simplex, unset"
+    rationale: "scenario assumption: ATO/CNP mechanisms follow their own state, compromised holders still make legitimate (none) purchases"
+    approved: true
+  spend_unfamiliarity_and_geography_shapes:
+    symbol: '(a_S,b_S),(a_U,b_U),(a_G,b_G)'
+    value: {S: {a: 2.0, b: 5.0}, U: {a: 1.5, b: 8.5}, G: {a: 2.0, b: 8.0}}
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "unset"
+    rationale: "scenario assumption: mean S 0.29, U 0.15, G 0.20; right-skewed"
+    approved: true
+  authorization_coefficients:
+    symbol: '\gamma_0,\gamma_L,\gamma_v,\gamma_r'
+    value: {gamma_0: 3.5, gamma_L: 2.0, gamma_v: 0.3, gamma_r: 0.6}
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "signs constrained, values unset"
+    rationale: "all positive and subtracted in Eq 18 (limit ratio, velocity, risk lower approval); gamma_0 gives ~97% baseline approval, scenario assumption"
+    approved: true
+  pre_authorization_risk_weights:
+    symbol: '\psi_z,\psi_F,\psi_d'
+    value: {psi_z: 0.3, psi_F: 0.8, psi_d: 0.8}
+    registry_class: "ASSUMED/OPEN"
+    spec_range: "positive, unset"
+    rationale: "positive per registry; magnitudes are scenario assumptions"
+    approved: true
+  customer_report_probability_and_delay:
+    symbol: 'p_{report},\mu_C,\sigma_C,p_{false}'
+    value: {p_report: 0.3, mu_C_log_hours: 5.48, sigma_C: 0.9, p_false: 0.0, truncate_hours: [1, 2160]}
+    registry_class: "OPEN"
+    spec_range: "unset; p_false=0"
+    rationale: "p_false copied from registry; mu_C and sigma_C are on log-hours; median exp(5.48)=240h=10 days and p_report are scenario assumptions; truncation 1h-90d from Eq 20b"
+    approved: true
+  rng_seed:
+    symbol: 's'
+    value: 20261101
+    registry_class: "ASSUMED reproducibility"
+    spec_range: "20261101"
+    rationale: "copied from registry"
+    approved: true
+
+  # ---- symbols used in Section 5 / 9 that are not registry rows ----
+  home_region_weights:
+    symbol: '\pi_R'
+    value:
+      pi_R: {NCR: 0.30, luzon_other: 0.40, visayas: 0.15, mindanao: 0.15}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption (Sec 9 marks ASSUMED/OPEN)"
+    approved: true
+  age_band_by_region:
+    symbol: '\pi_{A|R}'
+    value:
+      pi_A_given_R:
+        NCR: {"18-24": 0.10, "25-34": 0.28, "35-44": 0.25, "45-54": 0.18, "55-64": 0.12, "65+": 0.07}
+        luzon_other: {"18-24": 0.09, "25-34": 0.25, "35-44": 0.25, "45-54": 0.19, "55-64": 0.14, "65+": 0.08}
+        visayas: {"18-24": 0.10, "25-34": 0.26, "35-44": 0.24, "45-54": 0.18, "55-64": 0.14, "65+": 0.08}
+        mindanao: {"18-24": 0.11, "25-34": 0.27, "35-44": 0.24, "45-54": 0.18, "55-64": 0.13, "65+": 0.07}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: adult holders only, NCR slightly younger"
+    approved: true
+  employment_by_age:
+    symbol: '\pi_{E|A}'
+    value:
+      pi_E_given_A:      # employment depends on age only
+        "18-24": {salaried_private: 0.50, salaried_public: 0.05, self_employed: 0.15, not_employed_other: 0.30}
+        "25-34": {salaried_private: 0.60, salaried_public: 0.10, self_employed: 0.22, not_employed_other: 0.08}
+        "35-44": {salaried_private: 0.55, salaried_public: 0.12, self_employed: 0.28, not_employed_other: 0.05}
+        "45-54": {salaried_private: 0.50, salaried_public: 0.14, self_employed: 0.31, not_employed_other: 0.05}
+        "55-64": {salaried_private: 0.40, salaried_public: 0.14, self_employed: 0.31, not_employed_other: 0.15}
+        "65+": {salaried_private: 0.10, salaried_public: 0.05, self_employed: 0.20, not_employed_other: 0.65}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption"
+    approved: true
+  urbanicity_by_region:
+    symbol: '\pi(Urban|R)'
+    value:
+      pi_U_given_R:
+        NCR: {urban: 0.95, peri-urban: 0.05, rural: 0.0}
+        luzon_other: {urban: 0.45, peri-urban: 0.35, rural: 0.20}
+        visayas: {urban: 0.40, peri-urban: 0.35, rural: 0.25}
+        mindanao: {urban: 0.40, peri-urban: 0.30, rural: 0.30}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption"
+    approved: true
+  income_logit:
+    symbol: '\alpha_j,u_{j,A},v_{j,R},w_{j,E}'
+    value:
+      form: "u_{j,A}=(j-2)*age_slope[A]; v_{j,R}=(j-2)*region_slope[R]; w_{j,E}=(j-2)*employment_slope[E]; j=0..4 over income_band order"
+      alpha: [0.0, 0.4, 0.5, 0.0, -1.0]
+      age_slope: {"18-24": -0.5, "25-34": -0.1, "35-44": 0.2, "45-54": 0.3, "55-64": 0.2, "65+": -0.1}
+      region_slope: {NCR: 0.4, luzon_other: 0.0, visayas: -0.1, mindanao: -0.2}
+      employment_slope: {salaried_private: 0.1, salaried_public: 0.0, self_employed: 0.1, not_employed_other: -0.6}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption; compact ordinal parametrization of Eq 2 (Sec 4.2: ordered categorical logit); not specified by the spec"
+    approved: true
+  account_tenure:
+    symbol: 'k_T,\theta_{T,I}'
+    value:
+      k_T: 2.0
+      theta_T_days: {lt_15k: 500, 15k_30k: 600, 30k_60k: 700, 60k_120k: 800, ge_120k: 900}
+      min_days: 30
+      max_days: 7300
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "30 days to 20 years"
+    rationale: "bounds from Eq 3; shape and scale (mean 1,000-1,800 days) are scenario assumptions"
+    approved: true
+  product_tier_logit:
+    symbol: 'product_tier logit'
+    value:
+      reference: basic
+      intercept: {gold: -0.5, premium: -2.0}
+      income_slope: {gold: 0.6, premium: 1.0}       # times (income_index - 2)
+      spend_logit_slope: {gold: 0.3, premium: 0.5}  # times logit(S_i)
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "positive slopes: income and spend propensity raise premium probability (Sec 5.3, 5.8 14a)"
+    approved: true
+  card_brand_weights:
+    symbol: '\pi_{brand}'
+    value:
+      pi_brand_given_tier:
+        basic: {brand_a: 0.55, brand_b: 0.35, brand_c: 0.10}
+        gold: {brand_a: 0.50, brand_b: 0.35, brand_c: 0.15}
+        premium: {brand_a: 0.40, brand_b: 0.35, brand_c: 0.25}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption; brand vocabulary is synthetic"
+    approved: true
+  card_tenor_and_issue:
+    symbol: 'card tenor'
+    value:
+      expiry_years_choices: [3, 4, 5]
+      issue_date_rule: "discrete uniform within the 3 years before start_date and after account_open_date; expiry = issue + 3-5 years, after start_date; no reissue in v0"
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "issue+3-5 years"
+    rationale: "tenor range from Sec 9; equal choice weights and issue rule are scenario assumptions"
+    approved: true
+  card_usage_share_dirichlet:
+    symbol: 'usage share Dirichlet'
+    value: {alpha: 2.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: symmetric Dirichlet, mild usage imbalance across a holder's cards"
+    approved: true
+  credit_limit_effects:
+    symbol: '\lambda_I,\lambda_Q,\lambda_T,\sigma_L'
+    value:
+      lambda_I: {lt_15k: -0.9, 15k_30k: -0.4, 30k_60k: 0.0, 60k_120k: 0.5, ge_120k: 1.0}
+      lambda_Q: {basic: 0.0, gold: 0.4, premium: 0.9}
+      lambda_T: 0.1
+      sigma_L: 0.5
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "positive increasing effects of income, tier and tenure on limit (Sec 4.2); magnitudes are scenario assumptions"
+    approved: true
+  merchant_country_weights:
+    symbol: '\pi_K'
+    value:
+      pi_K: {PH: 0.90, US: 0.05, SG: 0.02, JP: 0.02, AU: 0.01}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: share of merchants, not of transactions"
+    approved: true
+  merchant_region_by_country:
+    symbol: '\pi(R_m|K)'
+    value:
+      pi_Rm_given_K:
+        PH: {NCR: 0.35, luzon_other: 0.35, visayas: 0.15, mindanao: 0.15}
+        US: {US_West: 0.5, US_East_Central: 0.5}
+        SG: {Singapore: 1.0}
+        JP: {Japan_Kanto: 0.6, Japan_Kansai: 0.4}
+        AU: {Australia_East: 1.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption; country-consistent per Sec 3.3"
+    approved: true
+  merchant_size_by_category:
+    symbol: '\pi_{Z|C}'
+    value:
+      pi_Z_given_C:
+        grocery: {small: 0.40, medium: 0.40, large: 0.20}
+        dining: {small: 0.60, medium: 0.30, large: 0.10}
+        fuel: {small: 0.30, medium: 0.50, large: 0.20}
+        department_store: {small: 0.10, medium: 0.40, large: 0.50}
+        pharmacy: {small: 0.40, medium: 0.40, large: 0.20}
+        airline: {small: 0.20, medium: 0.30, large: 0.50}
+        lodging: {small: 0.40, medium: 0.40, large: 0.20}
+        utilities: {small: 0.10, medium: 0.30, large: 0.60}
+        electronics: {small: 0.30, medium: 0.40, large: 0.30}
+        entertainment: {small: 0.40, medium: 0.40, large: 0.20}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption"
+    approved: true
+  merchant_online_capable_prob:
+    symbol: 'p(CNP|C)'
+    value:
+      p_online_capable: {grocery: 0.10, dining: 0.15, fuel: 0.02, department_store: 0.60, pharmacy: 0.20, airline: 0.98, lodging: 0.90, utilities: 0.90, electronics: 0.85, entertainment: 0.80}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: travel and utilities almost always online-capable"
+    approved: true
+  merchant_popularity_by_size:
+    symbol: 'popularity_m'
+    value: {small: 1.0, medium: 3.0, large: 10.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: size-weighted selection yields merchant concentration (Sec 8)"
+    approved: true
+  hourly_profile:
+    symbol: 'hourly profile'
+    value:
+      pi_hour: [0.005, 0.003, 0.002, 0.002, 0.003, 0.008, 0.020, 0.040, 0.055, 0.070, 0.070, 0.072, 0.070, 0.072, 0.055, 0.062, 0.065, 0.060, 0.065, 0.065, 0.058, 0.042, 0.025, 0.011]
+      tod_buckets: {night: [0, 5], morning: [6, 11], afternoon: [12, 17], evening: [18, 23]}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: daytime and early-evening peak, quiet overnight; tod bucket edges are a config choice"
+    approved: true
+  intensity_random_effect_sd:
+    symbol: '\sigma_b'
+    value: 0.5
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: holder-level log-intensity heterogeneity"
+    approved: true
+  amount_category_offsets:
+    symbol: '\mu_C'
+    value: {grocery: 0.2, dining: -0.1, fuel: 0.1, department_store: 0.3, pharmacy: -0.4, airline: 2.0, lodging: 1.3, utilities: 0.6, electronics: 1.0, entertainment: 0.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: log-amount offsets, travel and electronics larger"
+    approved: true
+  amount_channel_offsets:
+    symbol: '\mu_H'
+    value: {POS: 0.0, contactless: -0.5, ecommerce: 0.3, mail-phone: 0.4}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: contactless small ticket"
+    approved: true
+  amount_tod_offsets:
+    symbol: '\mu_t'
+    value: {night: 0.2, morning: -0.1, afternoon: 0.0, evening: 0.1}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption"
+    approved: true
+  amount_category_sigma:
+    symbol: '\sigma_C'
+    value: {grocery: 0.4, dining: 0.3, fuel: 0.3, department_store: 0.5, pharmacy: 0.4, airline: 0.7, lodging: 0.6, utilities: 0.5, electronics: 0.7, entertainment: 0.4}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "scenario assumption: larger for high-ticket categories"
+    approved: true
+  amount_bounds:
+    symbol: 'clip(1,500000)'
+    value: {min_php: 1, max_php: 500000}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "PHP 1-500k scenario cap"
+    rationale: "copied from Eq 13 and Sec 4.2"
+    approved: true
+  mechanism_amount_noise_sd:
+    symbol: 'e_{T,k}'
+    value: {none: 0.0, cnp: 0.5, ato: 0.6, burst: 0.4, merchant_compromise: 0.5}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "none=0 per Eq 13; SD of a zero-mean normal noise term is a scenario assumption (distribution of e_T not stated by spec)"
+    approved: true
+  cnp_state_transition:
+    symbol: '\omega_{C,0},\omega_{C,U},\omega_{C,V},q_{recover,C}'
+    value: {omega_C0: -6.0, omega_CU: 0.5, omega_CV: 1.0, q_recover_C: 0.3}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "Eq 15 says the card-level state is 'analogous'; reuse q_recover (0.3) and similar covariate effects, intercept one step lower than ato"
+    approved: true
+  burst_gap_rate:
+    symbol: 'burst gap rate'
+    value: {rate_per_hour: 12.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "short exponential gaps"
+    rationale: "scenario assumption: mean gap 5 minutes"
+    approved: true
+  logistic_scale_s:
+    symbol: 's'
+    value: 0.25
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "user-approved 2026-11-08: reduced from 1.0 so alert noise does not swamp θ (ranking depends on θ/s); not in registry"
+    approved: true
+  spend_deviation_settings:
+    symbol: '\sigma_{floor}'
+    value: {sigma_floor: 0.25, clip_abs: 10.0, min_prior_transactions: 3}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "finite, clipped +/-10"
+    rationale: "z uses running mean/SD of prior log amounts of that card, null when fewer than min_prior_transactions; clip from Sec 9; sigma_floor (log units) and minimum-history count are scenario assumptions"
+    approved: true
+  device_trust:
+    symbol: '\pi(device|H,Z,T)'
+    value:
+      pi_base_by_channel:
+        POS: {trusted: 0.90, new: 0.07, unknown: 0.03}
+        contactless: {trusted: 0.90, new: 0.07, unknown: 0.03}
+        ecommerce: {trusted: 0.70, new: 0.20, unknown: 0.10}
+        mail-phone: {trusted: 0.60, new: 0.20, unknown: 0.20}
+      logit_shift_B_active: {new: 1.0, unknown: 1.5}
+      logit_shift_C_active: {new: 0.8, unknown: 1.0}
+      logit_shift_per_logit_U: {new: 0.2, unknown: 0.2}
+      logit_shift_mechanism:
+        none: {new: 0.0, unknown: 0.0}
+        cnp: {new: 0.8, unknown: 1.0}
+        ato: {new: 1.2, unknown: 2.0}
+        burst: {new: 0.5, unknown: 0.5}
+        merchant_compromise: {new: 0.3, unknown: 0.3}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "positive shifts toward new/unknown for compromise states, U_i and ATO/CNP mechanisms (Eq 17: raise, do not force); magnitudes are scenario assumptions"
+    approved: true
+  distance_gamma:
+    symbol: 'k,\theta (distance_from_home_km)'
+    value: {shape_k: 1.5, mean_base_km: 8.0, log_mean_slope_travel_state: 1.0, log_mean_slope_foreign: 5.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "distance_from_home_km: Gamma(shape k, scale theta) with mean = mean_base*exp(slope_X*X + slope_F*foreign), increasing in both per Eq 14a; null for online channels; magnitudes are scenario assumptions"
+    approved: true
+  discard_rule_for_nonfraud_opportunities:
+    symbol: 'retain_or_discard'
+    value: {none: retain, cnp: retain, ato: retain, burst: discard, merchant_compromise: retain}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "configured per mechanism (Eq 17)"
+    rationale: "approved rule (Eq 17): non-fraud burst opportunities are discarded; non-fraud opportunities of all other mechanisms are retained as legitimate events"
+    approved: true
+  merchant_distance_by_tier:
+    symbol: 'D_{im} tier gamma (k,\theta)'
+    value:
+      tier_rule: "same region as home_region = near; other Philippine region = far; foreign = very far (merchant location is internal, no exported column)"
+      near: {shape_k: 1.5, mean_km: 5.0}
+      far: {shape_k: 2.0, mean_km: 400.0}
+      foreign: {shape_k: 2.0, mean_km: 3000.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "approved decision (Eq 11): D_im derived from regions since merchants have no coordinates; Gamma shape k and scale theta=mean/k per tier; magnitudes are scenario assumptions"
+    approved: true
+  merchant_compromise_flavor:
+    symbol: '\zeta_0,\zeta_V'
+    value: {zeta_0: -3.0, zeta_V: 8.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: "zeta_V positive"
+    rationale: "approved decision (Eq 15/17): at card-level episode start, P(flavor=merchant_compromise)=logit^-1(zeta_0+zeta_V*Vbar_{i,d-1}), otherwise cnp; Vbar = mean V_m of merchants transacted with on day d-1 (0 if none); flavor persists for the episode and feeds pi_T; scenario magnitudes (about 5% at Vbar=0, 25% at Vbar=0.2)"
+    approved: true
+  optional_missingness_and_rounding:
+    symbol: 'missingness rates, p_{round}'
+    value: {device_trust_missing_rate: 0.0, round_number_preference_prob: 0.0}
+    registry_class: "NOT_IN_REGISTRY"
+    spec_range: null
+    rationale: "approved v0 defaults (Sec 8): device_trust_level not missing, no round-number preference; structural nulls (distance for ecommerce/mail-phone, spend_deviation_z history rule, hours_since_prev_tx first transaction) are not rates"
+    approved: true

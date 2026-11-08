@@ -2,7 +2,7 @@
 
 ## Objective
 
-Produce a reproducible Jupyter notebook that explains the accepted synthetic dataset, its quality, fraud patterns, operational labels, and analytical limitations. Implementation must wait for the validated Deliverable 2 output.
+Produce a reproducible Jupyter notebook that explains the accepted synthetic dataset, its quality, fraud patterns, operational labels, and analytical limitations. Status: not started. The validated Deliverable 2 output now exists, so D3 is unblocked; the D3 issue has not been created yet. D3 loads only the five exported tables and the aggregate `label_gap_summary.csv`.
 
 ## Required analysis
 

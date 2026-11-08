@@ -50,6 +50,6 @@ John reviews the EDA for leakage and unsupported causal claims. Jee reviews any 
 
 ## Planning constraints
 
-- Deliverable 2 and 3 implementation has not started.
+- Deliverable 2 is implemented and verified (issue #12, ready for review). Deliverable 3 has not started; it is unblocked by D2.
 - Assignees are named here without inventing a GitHub username for Jee.
 - Existing GitHub issues (D1-01 to D1-08, #1 to #8) should be updated rather than duplicated.

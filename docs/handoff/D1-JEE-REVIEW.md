@@ -24,29 +24,29 @@ John Ray owns completion and technical QA of Deliverable 1. Jee performs a bound
 - [ ] Confirm the five tables, keys, cardinalities, nullable rules, and closed vocabularies.
 - [ ] Recount 38 exported non-key analytical features.
 - [ ] Trace each feature through the ERD, equations, dictionary, and generation contract.
-- [ ] Verify latent variables and true fraud are absent from analyst-facing exports.
-- [ ] Decide the negative-label maturation policy and whether declined attempts are learner-visible.
+- [x] Verify latent variables and true fraud are absent from analyst-facing exports.
+- [x] Decide the negative-label maturation policy and whether declined attempts are learner-visible.
 
 ## D1 final team review
 
-- [ ] Confirm every OPEN item is either resolved or explicitly deferred to D2 calibration.
+- [x] Confirm every OPEN item is either resolved or explicitly deferred to D2 calibration.
 - [ ] Review all 20 formal relationships for causal ordering and ambiguity.
-- [ ] Confirm rolling features use only prior events.
-- [ ] Inspect the rendered Word document for equations, tables, ERD readability, and page breaks.
-- [ ] Record approval, requested revisions, or rejection with reasons.
-- [ ] Only after acceptance, authorize issue completion and final submission.
+- [x] Confirm rolling features use only prior events.
+- [ ] Inspect the rendered Word document for equations, tables, ERD readability, and page breaks. (Not done in Word; a LibreOffice render was inspected. See D1-TECHNICAL-QA.md.)
+- [x] Record approval, requested revisions, or rejection with reasons.
+- [x] Only after acceptance, authorize issue completion and final submission.
 
-## Issue status recommendation
+## Issue status
 
-The public issues are D1-01 through D1-08 (#1 to #8) on the GitHub repository. Attach the final files to them, move technically complete items according to their acceptance criteria, and record the remaining team-review step accurately. Do not create duplicate issues.
+Issues #1 to #8 and the close-out issue #11 were closed by Jee on 2026-11-08. D1-08 (peer review) was closed in solo mode. Latent-variable absence and prior-only rolling features were also verified on generated data in D2 (see [Deliverable 2 QA](../qa/D2-TECHNICAL-QA.md)).
 
 ## Next-deliverable responsibilities
 
-The detailed division for Deliverables 2 and 3 is maintained in `docs/project/TEAM-WORKFLOW.md`. Jee owns statistical QA and validation documentation for D2 and primary EDA development for D3; John owns generator implementation and final technical integration.
+The detailed division for Deliverables 2 and 3 is maintained in `docs/project/TEAM-WORKFLOW.md`. D2 is implemented and ready for review (issue #12); D3 has not started.
 
 ## Sign-off record
 
 Reviewer: Jee  
-Decision: Pending  
-Date: Pending  
-Required revisions: Pending
+Decision: Accepted (D1 issues closed on the board, solo review)  
+Date: 2026-11-08  
+Required revisions: None blocking; cosmetic DOCX items listed in D1-TECHNICAL-QA.md

@@ -8,7 +8,7 @@ Implement and validate the Deliverable 2 generator described in its [implementat
 
 John Ray owns generator architecture, mathematical implementation, fraud-event simulation, performance, scalability, integration, and final technical review. Jee owns statistical QA, distribution tests, key integrity, missingness and outlier checks, imbalance verification, reproducibility tests, and validation documentation.
 
-## Planned sequence
+## Sequence
 
 1. Freeze the D1 parameter registry and generator configuration.
 2. Implement deterministic entities, states, transactions, fraud mechanisms, and labels.
@@ -17,5 +17,5 @@ John Ray owns generator architecture, mathematical implementation, fraud-event s
 5. Measure performance at the agreed scale.
 6. Complete cross-review and document limitations.
 
-Implementation has not started. New GitHub issues will be created only when Sprint 2 is formally opened.
+Status: implemented and verified; ready for review (issue #12). Evidence is in [Deliverable 2 QA](../qa/D2-TECHNICAL-QA.md). Cross-review is pending.
 
