@@ -13,15 +13,21 @@ from .labels import make_labels
 from .validate import validate_all
 
 
-def generate(cfg: dict, out_root=None, scale: str = "test", return_internal: bool = False) -> dict:
+PROFILES = {"SMALL": 10_000, "BASELINE": 150_000, "STRESS": 1_000_000}
+
+
+def generate(cfg: dict, out_root=None, scale: str = "test", profile: str | None = None, return_internal: bool = False) -> dict:
     cfg = copy.deepcopy(cfg)
     if scale == "target":
         cfg["simulation"].update(cfg["simulation"]["target_scale"])
     elif scale != "test":
         raise ValueError(f"scale must be 'test' or 'target', got {scale!r}")
+    exact_transactions = PROFILES.get(profile.upper()) if profile else None
+    if profile and exact_transactions is None:
+        raise ValueError(f"unknown profile {profile!r}; choose one of {sorted(PROFILES)}")
     st = rng_streams(cfg["simulation"]["seed"])
     ent = make_entities(cfg, st["entities"])
-    tx, info = simulate_events(cfg, ent, st)
+    tx, info = simulate_events(cfg, ent, st, exact_transactions=exact_transactions)
     lab, tx = make_labels(cfg, tx, st["review"])
     exports = build_exports({**ent, "transactions": tx, "fraud_labels": lab})
     gap = label_gap_summary(tx, ent["merchants"])
@@ -45,13 +51,14 @@ def main(argv=None):
     ap.add_argument("--config", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--scale", choices=["test", "target"], default="test")
+    ap.add_argument("--profile", choices=sorted(PROFILES))
     ap.add_argument("--seed", type=int)
     a = ap.parse_args(argv)
     cfg = load_config(a.config)
     if a.seed is not None:
         cfg["simulation"]["seed"] = a.seed
     t0 = time.time()
-    r = generate(cfg, a.out, a.scale)
+    r = generate(cfg, a.out, a.scale, a.profile)
     print("run dir:", r["run_dir"])
     for k, v in r["exports"].items():
         print(f"  {k}: {len(v)} rows")
