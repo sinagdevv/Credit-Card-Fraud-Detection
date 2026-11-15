@@ -1,0 +1,17 @@
+{
+  "commit": "44eae019e9565fe27da1c60e95cc24e4b8ec3ad9",
+  "fraud_count": 251,
+  "fraud_prevalence": 0.0016733333333333333,
+  "investigated": 1507,
+  "mechanism_counts": {
+    "ato": 121,
+    "burst": 47,
+    "cnp": 65,
+    "merchant_compromise": 18
+  },
+  "observed_positives": 110,
+  "runtime_seconds": 19.502,
+  "seed": 20261106,
+  "transactions": 150000,
+  "validation": "PASS"
+}

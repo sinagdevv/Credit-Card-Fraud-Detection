@@ -31,3 +31,7 @@ All scenarios used seed `20261101` and exact BASELINE count. HIGH_FRAUD_PRESSURE
 | STRICT_REVIEW_BUDGET | 278 | 772 | 104 | 840 |
 
 The strict-budget transaction CSV SHA-256 exactly matches the BASELINE transaction CSV SHA-256, proving that the review-capacity change did not mutate the generated transaction stream. Label rows can exceed investigations because D1 permits customer reports independent of analyst review. These are single-seed scenario demonstrations; uncertainty and repeated-seed calibration remain NOT VERIFIED.
+
+## Persisted eight-seed calibration
+
+Aggregate-only seed artifacts and summaries are stored in `docs/qa/evidence/calibration/` and are resumable through `python tools/run_calibration.py`. Eight independent exact 150K runs (20261101–20261108) had mean internal fraud prevalence 0.18517%, median 0.18633%, SD 0.01080 percentage points, range 0.16733%–0.20133%, and seed-level 95% t interval 0.17614%–0.19419%. The mean is 0.11483 percentage points below the provisional 0.3% assumption. Because the interval excludes 0.3% under these configuration settings, the exact-count configuration is systematically below that reference; the evidence does not establish whether the cause is exact-count conditioning, burst-budget conditioning, or the pre-existing episode/calibration model. No tuning was applied.
