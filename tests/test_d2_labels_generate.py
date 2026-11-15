@@ -4,6 +4,7 @@ import importlib
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -194,7 +195,7 @@ def test_cli_smoke(small_yaml_cfg, tmp_path):
     cfg = copy.deepcopy(small_yaml_cfg)
     cfgp = tmp_path / "small.yaml"
     cfgp.write_text(yaml.safe_dump(cfg))
-    cwd = gen_mod.__file__.rsplit("/sd008_gen/", 1)[0]
+    cwd = str(Path(gen_mod.__file__).parent.parent)
     p = subprocess.run([sys.executable, "-m", "sd008_gen.generate", "--config", str(cfgp),
                         "--out", str(tmp_path / "out")], cwd=cwd, capture_output=True, text=True, timeout=120)
     assert p.returncode == 0, p.stderr
