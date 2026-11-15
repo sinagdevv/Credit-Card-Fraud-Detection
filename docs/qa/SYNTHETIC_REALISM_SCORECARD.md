@@ -1,18 +1,19 @@
 # Synthetic realism scorecard
 
-Reviewed: 2026-11-15. `PASS` means the stated diagnostic was observed in the controlled test-scale run; it is not evidence of equivalence to production Philippine banking data.
+Reviewed: 2026-11-16. `PASS` means the stated simulation diagnostic was measured; it does not establish equivalence to production banking data.
 
-| Category | Diagnostic | Expected behavior | Result | Status / limitation |
-| --- | --- | --- | --- | --- |
-| Structural validity | Export allowlist, manifest, D1 validator | Five normalized tables and no latent columns | Observed in generated manifest and validation | PASS |
-| Temporal consistency | Generator's prior-event feature validator | No future events in rolling features | Covered by generator validation/tests; no independent adversarial fixture rerun | NOT VERIFIED |
-| Fraud mechanism coherence | Internal `mechanism` drives true fraud before observation | Fraud not produced by exported-label flipping | Implemented and test-scale run produced 950 internal events | PASS, model-based |
-| Class imbalance | Aggregate gap summary | Rare fraud relative to all events | 950 / 327,062 = 0.2905% | PASS, scenario assumption |
-| Label observation bias | Review and aggregate label gap | Sparse reviewed labels differ from population truth | 3,268 investigated and 376 observed positives | PASS, simulated |
-| Latent exclusion | CSV headers and prohibited-name validation | No latent/internal state in analyst tables | Observed | PASS |
-| Reproducibility | Same-seed byte hashes | Identical logical files | Test exists; independent repeat not yet completed | NOT VERIFIED |
-| Scenario responsiveness | Baseline vs pressure vs review-budget run | Causal parameters change outcomes | Required scenarios absent | FAIL |
-| Scalability | 10K, 150K, 1M benchmarks | Measured duration and memory | Only 327,062-row controlled run completed; no peak-memory capture | NOT VERIFIED |
-| Analyst usefulness | Executed D3 notebook | Clear denominators and incomplete-label analysis | D3 notebook absent | FAIL |
+| Category | Measured diagnostic | Result | Status / limitation |
+| --- | --- | --- | --- |
+| Structural validity | Five exports passed generator validation; latent/internal columns excluded | PK/FK and schema checks pass before export | PASS |
+| Temporal consistency | Existing chronological-feature tests and CI smoke | History features are prior-event only | PASS, implementation/test evidence |
+| Fraud mechanism coherence | Fraud created internally before review labels | High-pressure scenario increased fraud 278 to 318 through `compromise_initiation` | PASS |
+| Class imbalance | Eight exact 150K seeds | Mean internal prevalence 0.18517% | PASS as configured outcome; below provisional 0.3% reference |
+| Label observation bias | Exact BASELINE | 1,503 investigations and 117 observed positives among 150,000 transactions | PASS, simulated selection process |
+| Latent exclusion | Export allowlist and validation | No row-level truth or latent columns in analyst exports | PASS |
+| Reproducibility | Fixed seed, hashes, CI smoke | Exact profile output and strict-review transaction hash reproduced | PASS; internal-state digest not persisted |
+| Scenario responsiveness | Matched 150K seed | High pressure and review budget changed intended mechanisms/policy | PASS; one-seed evidence |
+| Scalability | Default STRESS profile | 1M transactions in about 96s; 1.22 GiB working set | PASS on measured Windows environment |
+| Analyst usefulness | Executed D3 exact BASELINE | 20.24s, analyst-facing tables only, incomplete-label narrative retained | PASS |
+| External realism | Comparison to real banking data | No such calibration dataset or benchmark was used | NOT VERIFIED |
 
-The scorecard intentionally has no weighted composite score: its categories answer different questions and the available evidence does not justify a single number.
+The scorecard intentionally has no weighted composite score: structural correctness, internal plausibility, and external realism are different claims.

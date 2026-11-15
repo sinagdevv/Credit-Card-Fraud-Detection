@@ -1,0 +1,19 @@
+{
+  "card_count_cv": 0.8174866349761173,
+  "daily_mean": 828.7292817679559,
+  "daily_variance": 7493.698526703499,
+  "fraud": 291,
+  "fraud_prevalence": 0.00194,
+  "investigation_coverage": 0.010033333333333333,
+  "mechanisms": {
+    "ato": 161,
+    "burst": 41,
+    "cnp": 58,
+    "merchant_compromise": 31
+  },
+  "mode": "exact",
+  "observed_positives": 103,
+  "runtime_seconds": 19.244,
+  "seed": 20261102,
+  "transactions": 150000
+}

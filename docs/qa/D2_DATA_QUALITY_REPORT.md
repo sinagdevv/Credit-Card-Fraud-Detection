@@ -1,37 +1,42 @@
 # D2 data quality report
 
-## Controlled test-scale evidence
+Reviewed: 2026-11-16. Results below are simulation diagnostics, not validation against Philippine banking data.
 
-The 2026-11-15 controlled run with seed `20261115` produced 2,000 cardholders, 2,593 cards, 500 merchants, 327,062 transactions, and 3,495 sparse label rows. Its aggregate QA summary reported 950 internal fraud events, 3,268 investigated transactions, and 376 observed positives. The corresponding true-fraud prevalence was 0.2905% and review coverage was 0.9992%. These are scenario outcomes, not external banking benchmarks.
+## Exact-count method
 
-The generator validation completed before output writing; its allowlist protects ordinary exports from latent variables and row-level truth. The clean CI run validates the schema/test/notebook path. Exact named scale profiles, scenario comparisons, peak-memory measurements, and a 1M benchmark remain NOT VERIFIED.
+The original generator retains its stochastic Gamma--Poisson arrival process. Named profiles condition a sampled Gamma-mixed cardholder-day intensity field on a requested global count and allocate events with a multinomial draw. Ineligible cardholder-days have zero allocation probability. This preserves intensity heterogeneity and the requested total, but changes unconditional daily-count dependence. Fraud states and mechanism attributes are still generated before labels; exact mode deliberately prevents a fraud burst from expanding beyond the allocated event budget. That is a limitation, not a claim of equivalence to stochastic mode.
 
-## Conditional exact-count evidence
-
-Exact mode draws Gamma-mixed cardholder-day intensities and conditions independent Poisson arrivals on the requested total by a multinomial allocation. It therefore preserves the configured intensity heterogeneity but changes the unconditional daily-count distribution. In exact mode burst-labelled events retain mechanism-specific attributes but do not expand the fixed event budget; this is a documented conditioning compromise.
+## Measured profile evidence
 
 | Profile | Transactions | Cardholders | Cards | Merchants | Labels | Internal fraud | Investigated | Observed positives |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| SMALL | 10,000 | 2,000 | not separately retained | 500 | 132 | 13 | 130 | 4 |
+| SMALL | 10,000 | 2,000 | not retained separately | 500 | 132 | 13 | 130 | 4 |
 | BASELINE | 150,000 | 2,000 | 2,613 | 500 | 1,567 | 278 | 1,503 | 117 |
 | STRESS | 1,000,000 | 2,000 | 2,613 | 500 | 10,438 | 1,947 | 9,990 | 755 |
 
-The BASELINE prevalence was 0.1853% and review coverage 1.0020%; the STRESS prevalence was 0.1947% and review coverage 0.9990%. Rare-event and clustered-mechanism variation is expected, but the apparent undercalibration needs repeated-seed analysis before any parameter change.
+All three completed generator validation before export, including five-table schema checks, PK/FK integrity, timestamp bounds, category validation, and latent/internal-column exclusion. The 1M run used Windows 11 / Python 3.13.2, completed in about 96 seconds, had a peak external process working set of 1,306,980,352 bytes (about 1.22 GiB), and wrote 220,617,588 bytes (about 210 MiB). Working set is a process-memory measure, not full-system memory.
 
-The default-population STRESS run completed on Windows 11 with Python 3.13.2 in approximately 96 seconds (wall-clock inferred from process start and atomic output completion). Peak process working set observed externally was 1,306,980,352 bytes (about 1.22 GiB); all CSV/manifest output totalled 220,617,588 bytes (about 210 MiB). The monitor captures process working set rather than a full-system memory profile. Scenario experiments, repeated-seed calibration, and exact-profile D3 execution remain NOT VERIFIED.
+## Calibration and scenarios
 
-## Matched 150K scenario evidence
+Persisted aggregate-only artifacts in `docs/qa/evidence/calibration/` cover eight independent exact BASELINE seeds (`20261101`--`20261108`). Mean internal fraud prevalence was 0.18517%, median 0.18633%, SD 0.01080 percentage points, range 0.16733%--0.20133%, and the seed-level 95% t interval was 0.17614%--0.19419%. This is 0.11483 percentage points below the provisional 0.3% reference. Eight seeds are the Monte Carlo units; transaction-level binomial intervals would be inappropriate because fraud is clustered. The evidence supports undercalibration relative to that configured reference, but does not isolate its cause or justify parameter tuning.
 
-All scenarios used seed `20261101` and exact BASELINE count. HIGH_FRAUD_PRESSURE changes `compromise_initiation` from -5.5 to -4.5; STRICT_REVIEW_BUDGET changes only `review_coverage` from 0.01 to 0.005.
+Matched exact-150K scenarios (seed `20261101`) were:
 
-| Scenario | Internal fraud | Investigated | Observed positives | Label rows |
-| --- | ---: | ---: | ---: | ---: |
-| BASELINE | 278 | 1,503 | 117 | 1,567 |
-| HIGH_FRAUD_PRESSURE | 318 | 1,503 | 146 | 1,575 |
-| STRICT_REVIEW_BUDGET | 278 | 772 | 104 | 840 |
+| Scenario | Parameter change | Internal fraud | Investigated | Observed positives | Label rows |
+| --- | --- | ---: | ---: | ---: | ---: |
+| BASELINE | none | 278 | 1,503 | 117 | 1,567 |
+| HIGH_FRAUD_PRESSURE | `compromise_initiation`: -5.5 to -4.5 | 318 | 1,503 | 146 | 1,575 |
+| STRICT_REVIEW_BUDGET | `review_coverage`: 1% to 0.5% | 278 | 772 | 104 | 840 |
 
-The strict-budget transaction CSV SHA-256 exactly matches the BASELINE transaction CSV SHA-256, proving that the review-capacity change did not mutate the generated transaction stream. Label rows can exceed investigations because D1 permits customer reports independent of analyst review. These are single-seed scenario demonstrations; uncertainty and repeated-seed calibration remain NOT VERIFIED.
+The strict-budget transaction CSV SHA-256 matched the baseline transaction CSV exactly, so the review policy did not alter analyst-facing transactions. Labels may exceed investigations because D1 permits customer reports independent of analyst review. Per-transaction internal-state equality was not separately persisted and is therefore **NOT VERIFIED**. These are single-seed scenario demonstrations, not uncertainty-qualified effect estimates.
 
-## Persisted eight-seed calibration
+## Stochastic versus exact evidence
 
-Aggregate-only seed artifacts and summaries are stored in `docs/qa/evidence/calibration/` and are resumable through `python tools/run_calibration.py`. Eight independent exact 150K runs (20261101–20261108) had mean internal fraud prevalence 0.18517%, median 0.18633%, SD 0.01080 percentage points, range 0.16733%–0.20133%, and seed-level 95% t interval 0.17614%–0.19419%. The mean is 0.11483 percentage points below the provisional 0.3% assumption. Because the interval excludes 0.3% under these configuration settings, the exact-count configuration is systematically below that reference; the evidence does not establish whether the cause is exact-count conditioning, burst-budget conditioning, or the pre-existing episode/calibration model. No tuning was applied.
+Three seeds (`20261101`--`20261103`) are persisted under `docs/qa/evidence/mode_comparison/`. Mean stochastic output was 319,706 transactions with 0.28208% internal fraud, 1.0000% review coverage, daily variance 33,903, and card activity CV 0.7998. Exact BASELINE output was 150,000 transactions with 0.19356% internal fraud, 1.0024% review coverage, daily variance 7,434, and card activity CV 0.8060. Stochastic burst events totalled 1,217 of 2,705 fraud events; exact bursts totalled 124 of 871. The modes also differ in total exposure, so this descriptive comparison associates fixed-count conditioning and the burst budget with lower prevalence; it does not prove either is the sole cause. Amount-distribution comparison is **NOT VERIFIED** by this aggregate-only runner.
+
+## Remaining limitations
+
+- The provisional 0.3% reference is not achieved by exact mode and is not externally calibrated.
+- Exact conditioning changes the unconditional arrival distribution and limits burst expansion.
+- Analyst exports intentionally omit `Y_true`; internal rates above are QA-only.
+- Synthetic plausibility and successful internal checks do not establish production or geographic realism.

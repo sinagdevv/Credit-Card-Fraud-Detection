@@ -1,0 +1,118 @@
+{
+  "runs": [
+    {
+      "card_count_cv": 0.7778389547680921,
+      "daily_mean": 1756.8729281767955,
+      "daily_variance": 32231.88931860037,
+      "fraud": 931,
+      "fraud_prevalence": 0.002927728196129487,
+      "investigation_coverage": 0.010009622823072134,
+      "mechanisms": {
+        "ato": 339,
+        "burst": 413,
+        "cnp": 127,
+        "merchant_compromise": 52
+      },
+      "mode": "stochastic",
+      "observed_positives": 379,
+      "runtime_seconds": 25.873,
+      "seed": 20261101,
+      "transactions": 317994
+    },
+    {
+      "card_count_cv": 0.7896956807566312,
+      "daily_mean": 828.7292817679559,
+      "daily_variance": 7160.154082259055,
+      "fraud": 278,
+      "fraud_prevalence": 0.0018533333333333334,
+      "investigation_coverage": 0.01002,
+      "mechanisms": {
+        "ato": 160,
+        "burst": 38,
+        "cnp": 59,
+        "merchant_compromise": 21
+      },
+      "mode": "exact",
+      "observed_positives": 117,
+      "runtime_seconds": 20.24,
+      "seed": 20261101,
+      "transactions": 150000
+    },
+    {
+      "card_count_cv": 0.8205028702727178,
+      "daily_mean": 1763.403314917127,
+      "daily_variance": 33492.73087783916,
+      "fraud": 904,
+      "fraud_prevalence": 0.0028322931548738,
+      "investigation_coverage": 0.009988219665639021,
+      "mechanisms": {
+        "ato": 291,
+        "burst": 424,
+        "cnp": 151,
+        "merchant_compromise": 38
+      },
+      "mode": "stochastic",
+      "observed_positives": 337,
+      "runtime_seconds": 19.973,
+      "seed": 20261102,
+      "transactions": 319176
+    },
+    {
+      "card_count_cv": 0.8174866349761173,
+      "daily_mean": 828.7292817679559,
+      "daily_variance": 7493.698526703499,
+      "fraud": 291,
+      "fraud_prevalence": 0.00194,
+      "investigation_coverage": 0.010033333333333333,
+      "mechanisms": {
+        "ato": 161,
+        "burst": 41,
+        "cnp": 58,
+        "merchant_compromise": 31
+      },
+      "mode": "exact",
+      "observed_positives": 103,
+      "runtime_seconds": 19.244,
+      "seed": 20261102,
+      "transactions": 150000
+    },
+    {
+      "card_count_cv": 0.8011600597064341,
+      "daily_mean": 1778.7237569060774,
+      "daily_variance": 35985.31215469613,
+      "fraud": 870,
+      "fraud_prevalence": 0.002702291356705565,
+      "investigation_coverage": 0.010001584101829794,
+      "mechanisms": {
+        "ato": 298,
+        "burst": 380,
+        "cnp": 133,
+        "merchant_compromise": 59
+      },
+      "mode": "stochastic",
+      "observed_positives": 353,
+      "runtime_seconds": 23.365,
+      "seed": 20261103,
+      "transactions": 321949
+    },
+    {
+      "card_count_cv": 0.8107822596181545,
+      "daily_mean": 828.7292817679559,
+      "daily_variance": 7648.50963781461,
+      "fraud": 302,
+      "fraud_prevalence": 0.002013333333333333,
+      "investigation_coverage": 0.01002,
+      "mechanisms": {
+        "ato": 158,
+        "burst": 45,
+        "cnp": 64,
+        "merchant_compromise": 35
+      },
+      "mode": "exact",
+      "observed_positives": 121,
+      "runtime_seconds": 19.507,
+      "seed": 20261103,
+      "transactions": 150000
+    }
+  ]
+}

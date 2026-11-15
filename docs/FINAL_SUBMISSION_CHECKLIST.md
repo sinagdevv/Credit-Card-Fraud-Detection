@@ -1,16 +1,16 @@
 # Final submission checklist
 
-Current assessment: **HOLD — D2 is reviewable; the project is not yet submission-ready.**
+Current assessment: **TECHNICALLY READY FOR HUMAN REVIEW — not merged or peer-approved.**
 
-- [x] D1 source and DOCX have an automated consistency check.
-- [x] D2 produces five allowlisted analyst tables in a controlled run.
-- [x] Internal fraud state is excluded from ordinary analyst CSV exports.
-- [x] PR #13 and its predecessor PR #10 were audited.
-- [x] D2 exact 10K, 150K, and 1M profiles measured; calibration limitation documented.
-- [x] Baseline, high-fraud-pressure, and strict-review-budget single-seed comparison recorded.
-- [ ] D3 notebook exists and is wired into CI; execution against a fresh export still needs recorded evidence.
-- [ ] End-to-end smoke command and CI workflow.
-- [ ] `D2_DATA_QUALITY_REPORT.md` and `END_TO_END_VALIDATION_REPORT.md` with current evidence.
-- [ ] Human technical/peer review and merge authorization.
+- [x] D1 source and DOCX pass the six-check structural validator.
+- [x] D2 generates five allowlisted analyst tables; PK/FK, chronology, and latent-exclusion checks run before export.
+- [x] Exact SMALL (10K), BASELINE (150K), and STRESS (1M) profiles were measured.
+- [x] STRESS completed in about 96s with about 1.22 GiB observed working set.
+- [x] Eight-seed exact calibration is persisted; the mean is 0.18517%, below the provisional 0.3% reference.
+- [x] High-fraud-pressure and strict-review-budget scenarios were measured; strict review preserves the transaction CSV.
+- [x] D3 executed on a fresh exact 150K export and is included in clean CI smoke.
+- [x] Aggregate-only stochastic-versus-exact comparison is persisted and documents the conditioning limitation.
+- [x] CI passed through commit `75af477`; final evidence commit requires its own CI confirmation.
+- [ ] Human technical/peer review, PR approval, and merge authorization.
 
-Before submission, run the suite in a normal clean Python environment, execute both notebooks from top to bottom, record the actual runtime/memory results, and attach those results to the integration PR. Do not infer a review approval from this checklist.
+Submission reviewers must retain the stated limits: internal fraud diagnostics are not analyst exports; exact mode is not distributionally identical to stochastic mode; the 0.3% reference is not achieved; and no external banking-data validation has been performed.
