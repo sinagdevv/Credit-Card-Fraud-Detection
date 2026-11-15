@@ -25,6 +25,8 @@ def generate(cfg: dict, out_root=None, scale: str = "test", profile: str | None 
     exact_transactions = PROFILES.get(profile.upper()) if profile else None
     if profile and exact_transactions is None:
         raise ValueError(f"unknown profile {profile!r}; choose one of {sorted(PROFILES)}")
+    if exact_transactions is not None:
+        cfg["simulation"]["exact_transactions"] = exact_transactions
     st = rng_streams(cfg["simulation"]["seed"])
     ent = make_entities(cfg, st["entities"])
     tx, info = simulate_events(cfg, ent, st, exact_transactions=exact_transactions)
