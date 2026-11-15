@@ -14,5 +14,8 @@ Exact mode draws Gamma-mixed cardholder-day intensities and conditions independe
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | SMALL | 10,000 | 2,000 | not separately retained | 500 | 132 | 13 | 130 | 4 |
 | BASELINE | 150,000 | 2,000 | 2,613 | 500 | 1,567 | 278 | 1,503 | 117 |
+| STRESS | 1,000,000 | 2,000 | 2,613 | 500 | 10,438 | 1,947 | 9,990 | 755 |
 
-The BASELINE prevalence was 0.1853% and review coverage 1.0020%; rare-event variation is expected under the configured mechanism. STRESS, scenario experiments, peak-memory capture, and repeated-seed reproducibility are NOT VERIFIED.
+The BASELINE prevalence was 0.1853% and review coverage 1.0020%; the STRESS prevalence was 0.1947% and review coverage 0.9990%. Rare-event and clustered-mechanism variation is expected, but the apparent undercalibration needs repeated-seed analysis before any parameter change.
+
+The default-population STRESS run completed on Windows 11 with Python 3.13.2 in approximately 96 seconds (wall-clock inferred from process start and atomic output completion). Peak process working set observed externally was 1,306,980,352 bytes (about 1.22 GiB); all CSV/manifest output totalled 220,617,588 bytes (about 210 MiB). The monitor captures process working set rather than a full-system memory profile. Scenario experiments, repeated-seed calibration, and exact-profile D3 execution remain NOT VERIFIED.
