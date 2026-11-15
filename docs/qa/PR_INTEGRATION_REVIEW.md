@@ -26,7 +26,7 @@ Reviewed: 2026-11-16. This is a technical review, not peer approval.
 2. **Resolved:** D3 executed against a fresh exact BASELINE export and the clean Python 3.12 smoke workflow executes it.
 3. **Resolved:** QA reports, calibration artifacts, scenario evidence, and aggregate stochastic-versus-exact evidence are present under `docs/qa/`.
 4. **Remaining limitation:** exact mode's eight-seed mean fraud prevalence is 0.18517%, below the provisional 0.3% reference. No unverified tuning was applied; external calibration is NOT VERIFIED.
-5. **Remaining review gate:** CI on the final evidence commit and human peer approval are still required. #13's historical co-author trailers are retained; no history rewrite is proposed.
+5. **Remaining review gate:** Python 3.12 CI passed on evidence commit `4a3ba27` (six D1 checks, 96 pytest tests, fresh D2 and D3 smoke); human peer approval remains required. #13's historical co-author trailers are retained; no history rewrite is proposed.
 
 ## D1 reconciliation
 

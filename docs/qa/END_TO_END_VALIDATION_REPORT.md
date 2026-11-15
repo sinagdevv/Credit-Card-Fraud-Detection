@@ -2,7 +2,9 @@
 
 ## Clean CI
 
-GitHub Actions run [43738123280](https://github.com/sinagdevv/Credit-Card-Fraud-Detection/actions/runs/43738123280) passed on commit `75af47716aac0da2cd646da5dee0cae9eb9a8ea6` with standard Python 3.12. The smoke job installed `requirements.txt`, ran `python tools/validate_d1.py`, ran `python -m pytest tests -q`, generated a fresh D2 export, and executed `02_Fraud_Analytics_EDA.ipynb`. This remains the clean-environment authority until the evidence-only commit from this report receives CI.
+GitHub Actions run [43739572787](https://github.com/sinagdevv/Credit-Card-Fraud-Detection/actions/runs/43739572787) passed on commit `4a3ba27897b31229689ff3f943212ec9e6637dce` with standard Python 3.12. The smoke job installed `requirements.txt`, passed all six D1 checks, passed `96` pytest tests in 8.07 seconds, generated a fresh D2 export, and executed `02_Fraud_Analytics_EDA.ipynb`.
+
+Local verification with the portable Python 3.13 runtime passed D1 but reached 95 passed / 1 failed when its embedded interpreter ignored the subprocess `PYTHONPATH` in `test_cli_smoke`; an earlier run also encountered sandbox temp-directory permissions. Those are local harness limitations, not a clean-environment failure: the same complete suite passed in standard Python 3.12 CI.
 
 ## Exact BASELINE D3 execution
 
