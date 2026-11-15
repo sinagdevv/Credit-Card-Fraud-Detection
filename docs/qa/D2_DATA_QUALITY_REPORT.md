@@ -19,3 +19,15 @@ Exact mode draws Gamma-mixed cardholder-day intensities and conditions independe
 The BASELINE prevalence was 0.1853% and review coverage 1.0020%; the STRESS prevalence was 0.1947% and review coverage 0.9990%. Rare-event and clustered-mechanism variation is expected, but the apparent undercalibration needs repeated-seed analysis before any parameter change.
 
 The default-population STRESS run completed on Windows 11 with Python 3.13.2 in approximately 96 seconds (wall-clock inferred from process start and atomic output completion). Peak process working set observed externally was 1,306,980,352 bytes (about 1.22 GiB); all CSV/manifest output totalled 220,617,588 bytes (about 210 MiB). The monitor captures process working set rather than a full-system memory profile. Scenario experiments, repeated-seed calibration, and exact-profile D3 execution remain NOT VERIFIED.
+
+## Matched 150K scenario evidence
+
+All scenarios used seed `20261101` and exact BASELINE count. HIGH_FRAUD_PRESSURE changes `compromise_initiation` from -5.5 to -4.5; STRICT_REVIEW_BUDGET changes only `review_coverage` from 0.01 to 0.005.
+
+| Scenario | Internal fraud | Investigated | Observed positives | Label rows |
+| --- | ---: | ---: | ---: | ---: |
+| BASELINE | 278 | 1,503 | 117 | 1,567 |
+| HIGH_FRAUD_PRESSURE | 318 | 1,503 | 146 | 1,575 |
+| STRICT_REVIEW_BUDGET | 278 | 772 | 104 | 840 |
+
+The strict-budget transaction CSV SHA-256 exactly matches the BASELINE transaction CSV SHA-256, proving that the review-capacity change did not mutate the generated transaction stream. Label rows can exceed investigations because D1 permits customer reports independent of analyst review. These are single-seed scenario demonstrations; uncertainty and repeated-seed calibration remain NOT VERIFIED.
