@@ -2,6 +2,7 @@ import copy
 import hashlib
 import importlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -196,8 +197,9 @@ def test_cli_smoke(small_yaml_cfg, tmp_path):
     cfgp = tmp_path / "small.yaml"
     cfgp.write_text(yaml.safe_dump(cfg))
     cwd = str(Path(gen_mod.__file__).parent.parent)
+    env = {**os.environ, "PYTHONPATH": cwd}
     p = subprocess.run([sys.executable, "-m", "sd008_gen.generate", "--config", str(cfgp),
-                        "--out", str(tmp_path / "out")], cwd=cwd, capture_output=True, text=True, timeout=120)
+                        "--out", str(tmp_path / "out")], cwd=cwd, env=env, capture_output=True, text=True, timeout=120)
     assert p.returncode == 0, p.stderr
     runs = list((tmp_path / "out").glob("run_*"))
     assert len(runs) == 1 and (runs[0] / "manifest.json").is_file()

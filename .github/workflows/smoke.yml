@@ -1,0 +1,27 @@
+name: SD-008 smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  generator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python tools/validate_d1.py
+      - run: python -m pytest tests -q
+      - name: Generate fresh D2 export
+        working-directory: deliverables/D2_Synthetic_Dataset_Generator
+        run: python -m sd008_gen.generate --config config/scenario_v0.yaml --out outputs-ci --scale test --seed 20261115
+      - name: Execute analyst EDA
+        working-directory: deliverables/D3_Exploratory_Data_Analysis
+        env:
+          DATA_DIR: ../D2_Synthetic_Dataset_Generator/outputs-ci/run_20261115_278cca34
+        run: jupyter nbconvert --to notebook --execute --inplace 02_Fraud_Analytics_EDA.ipynb --ExecutePreprocessor.timeout=180

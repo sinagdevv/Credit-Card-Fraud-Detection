@@ -1,4 +1,5 @@
 jupyter
+matplotlib
 nbclient
 numpy
 pandas
