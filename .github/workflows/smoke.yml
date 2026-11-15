@@ -23,5 +23,5 @@ jobs:
       - name: Execute analyst EDA
         working-directory: deliverables/D3_Exploratory_Data_Analysis
         env:
-          DATA_DIR: ../D2_Synthetic_Dataset_Generator/outputs-ci/run_20261115_278cca34
+          DATA_DIR: ../D2_Synthetic_Dataset_Generator/outputs-ci
         run: jupyter nbconvert --to notebook --execute --inplace 02_Fraud_Analytics_EDA.ipynb --ExecutePreprocessor.timeout=180
