@@ -21,7 +21,7 @@ Reviewed: 2026-11-15. This is a technical review, not peer approval.
 
 ## Problems and blockers
 
-1. **D3 is missing.** The requested executable analyst-facing notebook, case studies, visualizations, and incomplete-label narrative are not present.
+1. **D3 execution remains blocked.** The integration branch now contains the analyst-facing notebook and CI execution step, but neither has a completed clean-environment execution record yet.
 2. **The configured scales do not meet the requested contract.** #13 offers only `test` and `target`; it does not provide named 10K, 150K, and 1M transaction scenarios or evidence for a 1M run.
 3. **The requested CI smoke workflow, end-to-end command, D2 report, realism scorecard, and final checklist are absent.**
 4. **Cross-platform test issue found.** `tests/test_d2_labels_generate.py::test_cli_smoke` used a POSIX path split. The integration branch changes it to `Path(...).parent.parent`. On this isolated embedded-Python harness the subprocess additionally ignores its current working directory, so that one test remains environment-blocked; the preceding 95 tests pass with an explicit writable pytest base directory. A standard Python installation must run the full suite before merge.

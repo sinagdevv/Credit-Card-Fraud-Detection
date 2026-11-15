@@ -8,7 +8,7 @@ Current assessment: **HOLD — D2 is reviewable; the project is not yet submissi
 - [x] PR #13 and its predecessor PR #10 were audited.
 - [ ] D2 named 10K, 150K, and 1M scenarios plus measured benchmarks.
 - [ ] Baseline, high-fraud-pressure, and strict-review-budget scenario comparison.
-- [ ] Executed D3 analyst notebook using fresh export data only.
+- [ ] D3 notebook exists and is wired into CI; execution against a fresh export still needs recorded evidence.
 - [ ] End-to-end smoke command and CI workflow.
 - [ ] `D2_DATA_QUALITY_REPORT.md` and `END_TO_END_VALIDATION_REPORT.md` with current evidence.
 - [ ] Human technical/peer review and merge authorization.
