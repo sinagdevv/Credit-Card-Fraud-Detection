@@ -60,11 +60,11 @@ def overview(tx: pd.DataFrame, frames: dict, manifest: dict):
     st.markdown("<div class='notice'>Observed outcomes are available only for selected review or customer-report records. Uninvestigated transactions are unknown, not confirmed legitimate.</div>", unsafe_allow_html=True)
     daily = tx.set_index("transaction_ts").resample("D").agg(transactions=("transaction_id", "size"), value=("amount_php", "sum")).reset_index()
     c1, c2 = st.columns((1.2, 1))
-    c1.plotly_chart(px.line(daily, x="transaction_ts", y="transactions", title="Transaction volume over time", template="plotly_dark"), use_container_width=True)
-    c2.plotly_chart(px.histogram(tx, x="amount_php", nbins=70, log_y=True, title="Amount distribution · log count", template="plotly_dark"), use_container_width=True)
+    c1.plotly_chart(px.line(daily, x="transaction_ts", y="transactions", title="Transaction volume over time", template="plotly_dark"), width="stretch")
+    c2.plotly_chart(px.histogram(tx, x="amount_php", nbins=70, log_y=True, title="Amount distribution · log count", template="plotly_dark"), width="stretch")
     c3, c4 = st.columns(2)
-    c3.plotly_chart(px.bar(tx.groupby("merchant_category", as_index=False).amount_php.sum().sort_values("amount_php", ascending=False).head(12), x="merchant_category", y="amount_php", title="Spend by merchant category", template="plotly_dark"), use_container_width=True)
-    c4.plotly_chart(px.bar(tx.groupby("country_code", as_index=False).transaction_id.count().sort_values("transaction_id", ascending=False), x="country_code", y="transaction_id", title="Geographic transaction breakdown", template="plotly_dark"), use_container_width=True)
+    c3.plotly_chart(px.bar(tx.groupby("merchant_category", as_index=False).amount_php.sum().sort_values("amount_php", ascending=False).head(12), x="merchant_category", y="amount_php", title="Spend by merchant category", template="plotly_dark"), width="stretch")
+    c4.plotly_chart(px.bar(tx.groupby("country_code", as_index=False).transaction_id.count().sort_values("transaction_id", ascending=False), x="country_code", y="transaction_id", title="Geographic transaction breakdown", template="plotly_dark"), width="stretch")
 
 
 def explorer(tx: pd.DataFrame):
@@ -78,7 +78,7 @@ def explorer(tx: pd.DataFrame):
     page = st.number_input("Page", 1, pages, 1)
     cols = ["transaction_id", "transaction_ts", "amount_php", "merchant_category", "country_code", "channel", "tx_count_prev_1h", "spend_deviation_z", "label_status"]
     st.caption(f"{len(visible):,} matching records · pagination prevents a full dataset table payload.")
-    st.dataframe(visible.iloc[(page - 1) * page_size:page * page_size][cols], use_container_width=True, hide_index=True)
+    st.dataframe(visible.iloc[(page - 1) * page_size:page * page_size][cols], width="stretch", hide_index=True)
     selected = st.selectbox("Inspect transaction", visible.transaction_id.head(1000).tolist() if len(visible) else [])
     if selected:
         row = visible.loc[visible.transaction_id.eq(selected)].iloc[0]
@@ -96,7 +96,7 @@ def investigation(tx: pd.DataFrame):
     c3.metric("Observed positive", int(q.observed_fraud.fillna(False).sum()))
     c4.metric("Unknown / unlabeled", int(q.label_status.eq("unresolved / unlabeled").sum()))
     queue = q.sort_values("heuristic", ascending=False).head(100)
-    st.dataframe(queue[["transaction_id", "transaction_ts", "amount_php", "tx_count_prev_1h", "spend_deviation_z", "foreign_transaction", "device_trust_level", "heuristic", "label_status"]], use_container_width=True, hide_index=True)
+    st.dataframe(queue[["transaction_id", "transaction_ts", "amount_php", "tx_count_prev_1h", "spend_deviation_z", "foreign_transaction", "device_trust_level", "heuristic", "label_status"]], width="stretch", hide_index=True)
     st.caption("A positive observed label is an observed outcome; cleared, pending, and unlabeled records are not interchangeable.")
 
 
@@ -104,9 +104,9 @@ def scenario_lab():
     st.title("Scenario Lab")
     st.markdown("Verified 150K / seed 20261101 reference evidence. Internal fraud counts below are aggregate simulator QA statistics, never row-level analyst labels.")
     evidence = scenario_evidence(ROOT)
-    st.dataframe(evidence, use_container_width=True, hide_index=True)
+    st.dataframe(evidence, width="stretch", hide_index=True)
     m = evidence.melt(id_vars=["Scenario"], value_vars=["Internal QA fraud", "Investigations", "Observed positives"], var_name="Metric", value_name="Count")
-    st.plotly_chart(px.bar(m, x="Scenario", y="Count", color="Metric", barmode="group", title="Scenario comparison", template="plotly_dark"), use_container_width=True)
+    st.plotly_chart(px.bar(m, x="Scenario", y="Count", color="Metric", barmode="group", title="Scenario comparison", template="plotly_dark"), width="stretch")
     st.info("To generate a new scenario, use the validated D2 CLI explicitly. The dashboard does not start expensive simulations automatically.")
 
 
@@ -115,7 +115,7 @@ def quality():
     st.metric("Exact BASELINE mean fraud prevalence", "0.18517%", "8 independent seeds")
     st.caption("Seed-level 95% t interval: 0.17614%–0.19419% · provisional reference assumption: 0.3%.")
     st.warning("The exact-count configuration is below the provisional reference. This is not external banking-data calibration.")
-    st.dataframe(pd.DataFrame({"Mode": ["Stochastic", "Exact"], "Mean prevalence": ["0.28208%", "0.19356%"], "Mean transactions": [319706, 150000]}), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame({"Mode": ["Stochastic", "Exact"], "Mean prevalence": ["0.28208%", "0.19356%"], "Mean transactions": [319706, 150000]}), width="stretch", hide_index=True)
     st.caption("Mode comparison has different total exposure. Conditioning on an exact total changes arrival distributions and caps burst expansion; the difference is descriptive, not causal proof.")
 
 
