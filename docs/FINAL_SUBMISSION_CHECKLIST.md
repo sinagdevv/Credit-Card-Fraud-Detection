@@ -11,6 +11,7 @@ Current assessment: **TECHNICALLY READY FOR HUMAN REVIEW — not merged or peer-
 - [x] D3 executed on a fresh exact 150K export and is included in clean CI smoke.
 - [x] Aggregate-only stochastic-versus-exact comparison is persisted and documents the conditioning limitation.
 - [x] Final evidence CI passed on `4a3ba27` (Python 3.12, six D1 checks, 96 pytest tests, fresh D2 smoke, and D3 smoke).
+- [x] Current main CI passed on `fea99e0` (Python 3.12.16, six D1 checks, 102 pytest tests, fresh D2 smoke, and D3 smoke).
 - [ ] Human technical/peer review, PR approval, and merge authorization.
 
 Submission reviewers must retain the stated limits: internal fraud diagnostics are not analyst exports; exact mode is not distributionally identical to stochastic mode; the 0.3% reference is not achieved; and no external banking-data validation has been performed.

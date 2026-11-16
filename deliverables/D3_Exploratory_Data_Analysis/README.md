@@ -2,7 +2,18 @@
 
 ## Objective
 
-Produce a reproducible Jupyter notebook that explains the accepted synthetic dataset, its quality, fraud patterns, operational labels, and analytical limitations. Status: not started. The validated Deliverable 2 output now exists, so D3 is unblocked; the D3 issue has not been created yet. D3 loads only the five exported tables and the aggregate `label_gap_summary.csv`.
+Produce a reproducible Jupyter notebook that explains the accepted synthetic dataset, its quality, fraud patterns, operational labels, and analytical limitations. Status: implemented and executed against a fresh exact 150K BASELINE export; the clean Python 3.12 CI smoke workflow also executes it. D3 loads only the five exported tables and the aggregate `label_gap_summary.csv`.
+
+## Reproduce
+
+From the repository root, create and activate a Python 3.12 environment, then install `requirements.txt` as documented in the [root README](../../README.md#reproduce-from-a-clean-clone). Generate a D2 run first, then point `DATA_DIR` at either that `run_*` directory or a parent containing exactly one run:
+
+```powershell
+$env:DATA_DIR = "deliverables/D2_Synthetic_Dataset_Generator/outputs"
+jupyter nbconvert --to notebook --execute --inplace deliverables/D3_Exploratory_Data_Analysis/02_Fraud_Analytics_EDA.ipynb --ExecutePreprocessor.timeout=180
+```
+
+The notebook fails closed when it cannot resolve a manifest. It reads the five analyst-facing tables and `label_gap_summary.csv`; it does not read simulator latent state or row-level ground truth.
 
 ## Required analysis
 

@@ -33,10 +33,14 @@ Latent spending propensity, exposure, travel propensity, merchant vulnerability,
 
 ## How to run
 
-Setup from the repository root (Python 3.13 was used):
+Setup from the repository root. Python 3.12 is the validated CI reference environment:
 
 ```bash
-uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt
+python -m venv .venv
+# PowerShell: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 Notebook: open `D2_Synthetic_Dataset_Generator.ipynb`, set `SCALE` to exactly `"test"` or `"target"`, run all.
@@ -44,16 +48,16 @@ Notebook: open `D2_Synthetic_Dataset_Generator.ipynb`, set `SCALE` to exactly `"
 CLI, from this directory:
 
 ```bash
-../../.venv/bin/python -m sd008_gen.generate --config config/scenario_v0.yaml --out outputs --scale target
+python -m sd008_gen.generate --config config/scenario_v0.yaml --out outputs --profile BASELINE --seed 20261101
 ```
 
-Options: `--scale test|target`, `--seed N`, `--out DIR`. The CLI refuses to overwrite an existing run.
+Options: `--scale test|target`, `--profile SMALL|BASELINE|STRESS`, `--seed N`, `--out DIR`. A profile requests an exact transaction count; the CLI refuses to overwrite an existing run.
 
 Outputs go to the gitignored `outputs/run_<seed>_<config-hash>/`: `cardholders`, `cards`, `merchants`, `transactions`, `fraud_labels`, `label_gap_summary.csv`, and `manifest.json`.
 
 To change values, edit the YAML. Any `approved: false` entry blocks the run. A validation failure writes nothing.
 
-Tests, from the repository root: `.venv/bin/python -m pytest tests -q`.
+Tests, from the repository root: `python -m pytest tests -q`.
 
 ## Known limitations
 
