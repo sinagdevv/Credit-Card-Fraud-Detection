@@ -20,7 +20,7 @@ The model generates latent spending, travel, compromise, and merchant-risk state
 
 - [Deliverable 1: Model Research and Specifications](deliverables/D1_Model_Research_and_Specifications/SD-008_Model_Research_and_Specifications.docx) — complete (closed 2026-11-08), with the research basis, schema, ERD, distributions, structural equations, calibration plan, and data dictionary.
 - [Deliverable 2: Synthetic Dataset Generator](deliverables/D2_Synthetic_Dataset_Generator/README.md) — implemented and verified generator package (`sd008_gen`), configuration, driver notebook, and validation contract; ready for review.
-- [Deliverable 3: Exploratory Data Analysis](deliverables/D3_Exploratory_Data_Analysis/README.md) — descriptive and fraud-focused analysis; not started, unblocked by D2.
+- [Deliverable 3: Exploratory Data Analysis](deliverables/D3_Exploratory_Data_Analysis/README.md) — executed analyst-facing fraud analysis with incomplete-label interpretation and CI smoke coverage.
 
 ## Optional Fraud Intelligence dashboard
 
