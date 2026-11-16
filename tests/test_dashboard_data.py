@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from dashboard.services.data import analyst_transactions, assert_no_internal_columns, kpis, load_dataset
+from dashboard.services.data import analyst_transactions, assert_no_internal_columns, kpis, load_dataset, scenario_evidence
 
 
 def frames():
@@ -29,3 +29,9 @@ def test_load_requires_all_five_tables(tmp_path):
     (tmp_path / "manifest.json").write_text(json.dumps({}))
     with pytest.raises(FileNotFoundError):
         load_dataset(tmp_path)
+
+
+def test_scenario_evidence_uses_versioned_artifact():
+    root = Path(__file__).resolve().parents[1]
+    evidence = scenario_evidence(root)
+    assert evidence.loc[evidence.Scenario.eq("STRICT_REVIEW_BUDGET"), "Investigations"].item() == 772

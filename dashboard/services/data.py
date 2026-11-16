@@ -73,11 +73,5 @@ def kpis(tx: pd.DataFrame, frames: dict[str, pd.DataFrame]) -> dict[str, float |
 
 
 def scenario_evidence(repo_root: Path) -> pd.DataFrame:
-    return pd.DataFrame([
-        {"Scenario": "BASELINE", "Internal QA fraud": 278, "Investigations": 1503, "Observed positives": 117,
-         "Parameter change": "Reference configuration"},
-        {"Scenario": "HIGH_FRAUD_PRESSURE", "Internal QA fraud": 318, "Investigations": 1503, "Observed positives": 146,
-         "Parameter change": "compromise_initiation: -5.5 → -4.5"},
-        {"Scenario": "STRICT_REVIEW_BUDGET", "Internal QA fraud": 278, "Investigations": 772, "Observed positives": 104,
-         "Parameter change": "review_coverage: 1.0% → 0.5%"},
-    ])
+    evidence = repo_root / "docs" / "qa" / "evidence" / "scenario_reference.json"
+    return pd.DataFrame(json.loads(evidence.read_text())["scenarios"])
