@@ -139,7 +139,32 @@ def _prepare(cfg, ent, rng):
     )
 
 
-def _run(cx, ev, fr, days, beta0, collect=False):
+def _conditional_counts(cx, rng, total):
+    """Allocate exactly ``total`` cardholder-day arrivals conditional on Gamma weights.
+
+    Holding Gamma-mixed intensities fixed, independent Poisson arrivals conditional on
+    their total are multinomial. This intentionally conditions daily totals and is not
+    marginally identical to the stochastic Gamma--Poisson mode.
+    """
+    if total <= 0:
+        raise ValueError("exact transaction count must be positive")
+    P = lambda n: _pv(cx["cfg"], n)
+    lam0, rN = P("daily_arrival_baseline"), P("count_dispersion")
+    rho = P("daily_intensity_covariate_effects")
+    day_factor = np.asarray(rho["rho_w_mon_to_sun"], float)[cx["wd"]] + np.where(cx["is_hol"], rho["rho_h"]["holiday"], 0.0)
+    eligible = np.zeros((cx["nh"], cx["ndays"]), bool)
+    for d in range(cx["ndays"]):
+        slots = np.maximum(cx["cm"], 0)
+        eligible[:, d] = ((cx["cm"] >= 0) & (cx["exp_day"][slots] > d)).any(1)
+    lam = lam0 * np.exp(rho["rho_S"] * cx["lS"][:, None] + cx["b_i"][:, None] + day_factor[None, :])
+    weights = rng.gamma(rN, lam / rN) * eligible
+    flat = weights.ravel()
+    if not np.isfinite(flat).all() or flat.sum() <= 0:
+        raise ValueError("conditional arrival weights must be finite and positive in aggregate")
+    return rng.multinomial(total, flat / flat.sum()).reshape(cx["nh"], cx["ndays"])
+
+
+def _run(cx, ev, fr, days, beta0, collect=False, conditional_counts=None):
     """Simulate `days` day indices. beta0=None -> first pilot pass: nothing is discarded, only scores q_k are kept.
     collect=True with a beta0 -> pilot pass under the real retain/discard rule; scores q_k are kept for every opportunity."""
     cfg = cx["cfg"]
@@ -201,7 +226,7 @@ def _run(cx, ev, fr, days, beta0, collect=False):
         X = np.where(X, ~(u5 < qtr["q_travel_off"]), u4 < np.minimum(1.0, qtr["q_travel_on"] * cx["G"] / cx["EG"]))
         # ---- arrivals (Eq 10) ----
         lam = lam0 * np.exp(rho_S * cx["lS"] + cx["lam_weekday"][cx["wd"][d]] + (rho_h if cx["is_hol"][d] else 0.0) + cx["b_i"])
-        n = ev.poisson(ev.gamma(rN, lam / rN))
+        n = conditional_counts[:, d] if conditional_counts is not None else ev.poisson(ev.gamma(rN, lam / rN))
         h = np.repeat(np.arange(nh), n)
         w = cx["share"][np.maximum(cx["cm"][h], 0)] * ((cx["cm"][h] >= 0) & (cx["exp_day"][np.maximum(cx["cm"][h], 0)] > d))
         tot = w.sum(1)
@@ -216,7 +241,9 @@ def _run(cx, ev, fr, days, beta0, collect=False):
         # ---- mechanism (Eq 17) and burst expansion ----
         sidx = np.where(Cs[card], np.where(B[h], 4, 2) + (flav[card] == 2), np.where(B[h], 1, 0))
         mech = _draw(ev, cx["pi_rows"][sidx])
-        nb = np.where(mech == ib, 1 + ev.poisson(bsett, len(h)), 1)
+        # Exact-count mode conditions arrival counts. Burst-labelled events keep their
+        # mechanism-specific attributes but do not expand the fixed arrival budget.
+        nb = np.ones(len(h), int) if conditional_counts is not None else np.where(mech == ib, 1 + ev.poisson(bsett, len(h)), 1)
         par = np.repeat(np.arange(len(h)), nb)
         first = np.r_[True, par[1:] != par[:-1]]
         gap = np.where(first, 0.0, ev.exponential(3600.0 / gap_rate, len(par)))
@@ -229,7 +256,12 @@ def _run(cx, ev, fr, days, beta0, collect=False):
         h, card, mech = h[order], card[order], mech[order]
         seq = seq0 + order
         seq0 += len(order)
-        keep = sec < _DAY
+        if conditional_counts is not None:
+            # Preserve the conditional arrival budget at the rare second-level collision boundary.
+            sec = np.minimum(sec, _DAY - 1)
+            keep = np.ones(len(sec), bool)
+        else:
+            keep = sec < _DAY
         cnts["time_overflow"] += int((~keep).sum())
         h, card, mech, sec, seq = h[keep], card[keep], mech[keep], sec[keep], seq[keep]
         m = len(h)
@@ -323,7 +355,7 @@ def _run(cx, ev, fr, days, beta0, collect=False):
                 p = 1.0 / (1.0 + math.exp(-(beta0 + lq))) if ml[i] != i_none else 0.0
                 po[i] = p
                 y = yo[i] = uyl[i] < p
-                if not y and discard_mech[ml[i]]:
+                if conditional_counts is None and not y and discard_mech[ml[i]]:
                     ret[i] = False
                     continue
             rk = rko[i] = rl[i] + ps["psi_z"] * az
@@ -380,7 +412,7 @@ def solve_beta0(q, r_f, dis=None, lo=-30.0, hi=5.0, iters=200):
     return 0.5 * (lo + hi), g(0.5 * (lo + hi)) + r_f
 
 
-def simulate_events(cfg: dict, entities: dict, streams: dict) -> tuple[pd.DataFrame, dict]:
+def simulate_events(cfg: dict, entities: dict, streams: dict, exact_transactions: int | None = None) -> tuple[pd.DataFrame, dict]:
     cx = _prepare(cfg, entities, streams["events"])
     r_f = _pv(cfg, "underlying_fraud_target")
     pdays = range(cx["ndays"])
@@ -392,7 +424,8 @@ def simulate_events(cfg: dict, entities: dict, streams: dict) -> tuple[pd.DataFr
     for _ in range(PILOT_ITERS):  # re-run the pilot under the real retain/discard rule at the current beta0
         q, qd, pc = pil(beta0)
         beta0, exp_rate = solve_beta0(q, r_f, qd)
-    res, mc = _run(cx, streams["events"], streams["fraud"], range(cx["ndays"]), beta0)
+    conditional = _conditional_counts(cx, streams["events"], exact_transactions) if exact_transactions else None
+    res, mc = _run(cx, streams["events"], streams["fraud"], range(cx["ndays"]), beta0, conditional_counts=conditional)
     cats, chans, mechs = cx["cats"], cx["chans"], cx["mechs"]
     mer = entities["merchants"]
     cards = entities["cards"]
@@ -427,5 +460,7 @@ def simulate_events(cfg: dict, entities: dict, streams: dict) -> tuple[pd.DataFr
     assert list(df.columns[:len(ALLOWLIST["transactions"])]) == ALLOWLIST["transactions"]
     info = dict(beta0=beta0, pilot_days=len(pdays), pilot_n=len(q), pilot_expected_rate=exp_rate, pilot_counts=pc,
                 main_expected_rate=float(df["latent_fraud_p"].mean()), main_realized_rate=float(df["y_true"].mean()),
-                n_rows=n, discarded=mc)
+                n_rows=n, discarded=mc, exact_transactions=exact_transactions)
+    if exact_transactions is not None and n != exact_transactions:
+        raise RuntimeError(f"exact-count mode generated {n} rows, expected {exact_transactions}")
     return df, info
