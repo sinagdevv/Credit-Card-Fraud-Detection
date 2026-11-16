@@ -1,7 +1,9 @@
+import sys
 from pathlib import Path
 from PIL import Image, ImageDraw
 
-qa = Path(__file__).resolve().parents[1] / ".qa/d1-final"
+# Usage: make_docx_contact_sheets.py [folder-with-page-*.png]
+qa = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / ".qa/d1-final"
 pages = sorted(qa.glob("page-*.png"))
 for start in range(0, len(pages), 6):
     subset = pages[start:start + 6]

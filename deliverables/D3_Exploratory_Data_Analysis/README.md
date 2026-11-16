@@ -2,7 +2,7 @@
 
 ## Objective
 
-Produce a reproducible Jupyter notebook that explains the accepted synthetic dataset, its quality, fraud patterns, operational labels, and analytical limitations. Implementation must wait for the validated Deliverable 2 output.
+Produce a reproducible Jupyter notebook that explains the accepted synthetic dataset, its quality, fraud patterns, operational labels, and analytical limitations. Status: not started. The validated Deliverable 2 output now exists, so D3 is unblocked; the D3 issue has not been created yet. D3 loads only the five exported tables and the aggregate `label_gap_summary.csv`.
 
 ## Required analysis
 
@@ -13,7 +13,7 @@ Produce a reproducible Jupyter notebook that explains the accepted synthetic dat
 - Fraud class imbalance and fraud-rate comparisons with suitable denominators
 - Merchant category, channel, geography, and merchant-risk segmentation
 - Fraud-type and compromise-mechanism analysis
-- Ground-truth, investigation-selection, and observed-label comparisons
+- Ground-truth, investigation-selection, and observed-label comparisons, using only the aggregate `label_gap_summary.csv` (no row-level ground truth)
 - Feature distributions and relationships relevant to fraud analysis
 - Written interpretations for every material table or chart
 

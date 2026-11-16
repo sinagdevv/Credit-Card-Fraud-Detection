@@ -17,10 +17,17 @@ ERD = ROOT / "deliverables/D1_Model_Research_and_Specifications/assets/SD-008_ER
 
 
 def font(size, bold=False):
-    try:
-        return ImageFont.truetype("arialbd.ttf" if bold else "arial.ttf", size)
-    except OSError:
-        return ImageFont.load_default()
+    candidates = (
+        ("arialbd.ttf", "LiberationSans-Bold.ttf", "DejaVuSans-Bold.ttf", "/usr/share/fonts/noto/NotoSans-Bold.ttf")
+        if bold
+        else ("arial.ttf", "LiberationSans-Regular.ttf", "DejaVuSans.ttf", "/usr/share/fonts/noto/NotoSans-Regular.ttf")
+    )
+    for name in candidates:
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
 
 
 def build_erd():
@@ -79,15 +86,81 @@ def set_cell_margins(cell, top=70, start=90, bottom=70, end=90):
         tc_mar.append(node)
 
 
+def strip_math_parens(text):
+    """Drop outer parens of a math group like ' (Y_{k}=1)'; keep call parens and plain '(i)'."""
+    out, i = [], 0
+    while i < len(text):
+        if text[i] == "(" and (i == 0 or text[i - 1].isspace()):
+            depth, j = 0, i
+            while j < len(text):
+                depth += (text[j] == "(") - (text[j] == ")")
+                if depth == 0:
+                    break
+                j += 1
+            inner = text[i + 1 : j]
+            if depth == 0 and re.search(r"[\\_^]", inner):
+                out.append(inner)
+                i = j + 1
+                continue
+        out.append(text[i])
+        i += 1
+    return "".join(out)
+
+
+_SCRIPT_RE = re.compile(
+    r"(?<![A-Za-z0-9_])(logit|[A-Za-zΑ-ω])((?:[_^](?:\{[^}]*\}|-?[A-Za-z0-9](?![A-Za-z])))+)"
+)
+
+
+def math_segments(text):
+    """Split text into (kind, text) with kind '' / 'sub' / 'sup'; only single-letter bases."""
+    segs, pos = [], 0
+    for m in _SCRIPT_RE.finditer(text):
+        segs.append(("", text[pos : m.start()] + m.group(1)))
+        for op, body in re.findall(r"([_^])(\{[^}]*\}|-?[A-Za-z0-9])", m.group(2)):
+            segs.append(("sub" if op == "_" else "sup", body.strip("{}")))
+        pos = m.end()
+    segs.append(("", text[pos:]))
+    return [(k, t) for k, t in segs if t]
+
+
+def add_math_runs(paragraph, text, bold=False):
+    for kind, chunk in math_segments(text):
+        run = paragraph.add_run(chunk)
+        run.font.subscript = kind == "sub" or None
+        run.font.superscript = kind == "sup" or None
+        run.bold = bold or None
+
+
+def add_lead_runs(paragraph, line):
+    if line.startswith("**") and "**" in line[2:]:
+        lead, _, rest = line[2:].partition("**")
+        add_math_runs(paragraph, clean_inline(lead), bold=True)
+        line = rest
+    add_math_runs(paragraph, clean_inline(line))
+
+
+def is_display_formula(line):
+    s = line.strip().rstrip(".")
+    if not (s.startswith("(") and s.endswith(")")):
+        return False
+    depth = 0
+    for k, ch in enumerate(s):
+        depth += (ch == "(") - (ch == ")")
+        if depth == 0 and k < len(s) - 1:
+            return False
+    return True
+
+
 def clean_inline(text):
-    text = re.sub(r"[`*]", "", text).replace("\\(", "").replace("\\)", "")
+    text = strip_math_parens(re.sub(r"[`*]", "", text).replace("\\(", "").replace("\\)", ""))
     symbols = {
-        "\\lambda": "λ", "\\sigma": "σ", "\\theta": "θ", "\\omega": "ω",
+        "\\lambda": "λ", "\\Lambda": "Λ", "\\sigma": "σ", "\\theta": "θ", "\\omega": "ω",
         "\\epsilon": "ε", "\\kappa": "κ", "\\alpha": "α", "\\beta": "β",
         "\\gamma": "γ", "\\delta": "δ", "\\Delta": "Δ", "\\eta": "η",
         "\\rho": "ρ", "\\phi": "φ", "\\mu": "μ", "\\tau": "τ",
         "\\pi": "π", "\\sum": "Σ", "\\sim": "~", "\\in": "∈",
-        "\\bar": "bar", "\\hat": "hat", "\\,": "",
+        "\\bar": "bar", "\\hat": "hat ", "\\ne": "≠", "\\mid": "|", "\\,": "",
     }
     for source, target in symbols.items():
         text = text.replace(source, target)
@@ -100,7 +173,7 @@ def add_table(doc, rows, wide=False):
     table.autofit = True
     for j, value in enumerate(rows[0]):
         cell = table.rows[0].cells[j]
-        cell.text = clean_inline(value)
+        add_math_runs(cell.paragraphs[0], clean_inline(value))
         shade_cell(cell, "173F73")
         for run in cell.paragraphs[0].runs:
             run.font.bold = True
@@ -110,7 +183,7 @@ def add_table(doc, rows, wide=False):
     for i, row in enumerate(rows[1:], start=1):
         cells = table.add_row().cells
         for j, value in enumerate(row):
-            cells[j].text = clean_inline(value)
+            add_math_runs(cells[j].paragraphs[0], clean_inline(value))
             cells[j].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
             if i % 2 == 0:
                 shade_cell(cells[j], "EFF4FA")
@@ -230,31 +303,32 @@ def build_docx():
             current_heading = clean_inline(line[2:])
             if current_heading == "9 Data dictionary":
                 set_landscape(doc.add_section(WD_SECTION.NEW_PAGE))
-            doc.add_heading(current_heading, level=1)
+            h = doc.add_heading(current_heading, level=1)
+            if current_heading.startswith("Appendix") and not current_heading.startswith("Appendix A"):
+                h.paragraph_format.page_break_before = False
         elif line.startswith("## "):
             doc.add_heading(clean_inline(line[3:]), level=2)
-        elif re.match(r"^\d+\. ", line):
-            doc.add_paragraph(clean_inline(re.sub(r"^\d+\. ", "", line)), style="List Number")
+        elif re.match(r"^\d+[a-z]?\. ", line):
+            num, _, body = line.partition(" ")
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Inches(0.3)
+            p.paragraph_format.first_line_indent = Inches(-0.3)
+            p.add_run(num + " ")
+            add_lead_runs(p, body)
         elif line.startswith("- [ ] "):
             doc.add_paragraph("☐ " + clean_inline(line[6:]))
         elif line.startswith("- "):
             doc.add_paragraph(clean_inline(line[2:]), style="List Bullet")
         elif line.strip():
             p = doc.add_paragraph()
-            text_value = clean_inline(line)
-            if line.startswith("**") and "**" in line[2:]:
-                lead, _, rest = line[2:].partition("**")
-                p.add_run(lead).bold = True
-                p.add_run(clean_inline(rest))
-            else:
-                p.add_run(text_value)
+            add_lead_runs(p, line)
             if current_heading == "12 References":
                 p.paragraph_format.left_indent = Inches(0.25)
                 p.paragraph_format.first_line_indent = Inches(-0.25)
                 p.paragraph_format.space_after = Pt(4)
                 for run in p.runs:
                     run.font.size = Pt(8)
-            if line.strip().startswith("\\("):
+            if is_display_formula(line):
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         i += 1
 

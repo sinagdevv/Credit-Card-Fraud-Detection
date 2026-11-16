@@ -2,6 +2,9 @@
 .serena/
 .idea/
 .vscode/
+graphify-out
+.claude
+.agents
 
 # Python and notebook caches
 __pycache__/
@@ -36,3 +39,5 @@ models/
 ~$*.docx
 *.tmp
 
+.mcp.json
+skills-lock.json
