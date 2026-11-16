@@ -7,3 +7,5 @@ pillow
 pytest
 python-docx
 pyyaml
+plotly
+streamlit

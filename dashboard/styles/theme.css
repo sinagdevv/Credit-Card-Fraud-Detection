@@ -1,0 +1,10 @@
+:root { --ink:#e8eef8; --muted:#93a2b8; --line:#263245; --panel:#101926; --bg:#080d14; --accent:#52d7ff; --positive:#75e6ae; --warning:#ffc75a; }
+.stApp { background: var(--bg); color: var(--ink); }
+[data-testid="stSidebar"] { background:#0c131f; border-right:1px solid var(--line); }
+.metric-card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; min-height:108px; }
+.metric-card p { color:var(--muted); font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; margin:0 0 8px; }
+.metric-card strong { color:var(--ink); font-size:1.55rem; font-variant-numeric:tabular-nums; }
+.eyeline { color:var(--accent); font-size:.75rem; font-weight:700; letter-spacing:.12em; }
+.notice { background:#102338; border:1px solid #1e4a65; border-radius:12px; padding:14px 16px; color:#c4eafd; }
+.stButton>button { border-radius:9px; border:1px solid #33677d; background:#123448; color:#eafaff; }
+@media (max-width: 768px) { .metric-card { min-height:90px; padding:14px; } .metric-card strong { font-size:1.2rem; } }

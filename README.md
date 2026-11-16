@@ -22,6 +22,10 @@ The model generates latent spending, travel, compromise, and merchant-risk state
 - [Deliverable 2: Synthetic Dataset Generator](deliverables/D2_Synthetic_Dataset_Generator/README.md) — implemented and verified generator package (`sd008_gen`), configuration, driver notebook, and validation contract; ready for review.
 - [Deliverable 3: Exploratory Data Analysis](deliverables/D3_Exploratory_Data_Analysis/README.md) — descriptive and fraud-focused analysis; not started, unblocked by D2.
 
+## Optional Fraud Intelligence dashboard
+
+The read-only [Fraud Intelligence dashboard](dashboard/README.md) makes analyst-facing synthetic exports explorable without changing D1–D3. It uses Streamlit, Plotly, the existing D2 output schema, and persisted aggregate QA evidence. It never loads latent variables or row-level ground-truth fraud states.
+
 The accessible source specification is available in [Markdown](docs/modeling/SD-008_MODEL_SPECIFICATION.md). Technical verification evidence is recorded in [Deliverable 1 QA](docs/qa/D1-TECHNICAL-QA.md) and [Deliverable 2 QA](docs/qa/D2-TECHNICAL-QA.md).
 
 ## Privacy and analytical principles
@@ -58,5 +62,5 @@ Start with the [project scope](docs/project/PROJECT-SCOPE.md), [deliverables map
 |---|---|---|
 | D1 Model Research and Specifications | Complete (closed 2026-11-08) | Issues #1-#8 and #11 closed; solo review recorded |
 | D2 Synthetic Dataset Generator | Implemented and verified; ready for review (issue #12) | 96 tests pass; target-scale run validated |
-| D3 Exploratory Data Analysis | Not started; unblocked by D2 | Issue not yet created |
+| D3 Exploratory Data Analysis | Implemented and CI-smoke-tested | Analyst-facing EDA and documented label limitations |
 
